@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>J-Integral Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;1,500&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: same lab-notebook sequence as the stress intensity page; each section a live figure beside its reasoning. */
+:root{
+  --bg:#edf0f3; --surface:#f9fafb; --ink:#152030; --muted:#566475; --rule:#cdd5de;
+  --accent:#1d58b8; --hot:#d9561a; --plate:#dfe5ec; --cool:#3f78cf;
+  --heat1:#f3cf74; --heat2:#e0661b; --heat3:#9b1230;
+  --f-display:"Spectral", Georgia, "Times New Roman", serif;
+  --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --s1:.8125rem; --s2:.9375rem; --s3:1.0625rem; --s4:1.375rem; --s5:clamp(1.9rem,4.2vw,2.75rem);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
+  --accent:#82abff; --hot:#ff8a3d; --plate:#1c2530; --cool:#5b92ea;
+  --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
+  --accent:#82abff; --hot:#ff8a3d; --plate:#1c2530; --cool:#5b92ea;
+  --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:var(--s2);line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:1180px;margin:0 auto}
+header{padding-block:44px 20px;display:grid;gap:14px}
+.eyebrow{font-family:var(--f-mono);font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:600;font-size:var(--s5);line-height:1.1;margin:0;text-wrap:balance;max-width:22ch}
+h1 em{font-style:italic;color:var(--accent);font-weight:500}
+.lede{max-width:66ch;margin:0;color:var(--muted);font-size:var(--s3)}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+nav.toc a{font-family:var(--f-mono);font-size:var(--s1);color:var(--ink);text-decoration:none;border:1px solid var(--rule);
+  padding:5px 10px;border-radius:999px;background:var(--surface)}
+nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--accent);color:var(--accent)}
+nav.toc b{color:var(--accent);font-weight:500;margin-right:6px}
+
+section.scene{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;padding-block:36px;border-top:1px solid var(--rule)}
+@media (max-width:860px){ section.scene{grid-template-columns:minmax(0,1fr);gap:18px} }
+.fig{display:grid;gap:10px;min-width:0;align-content:start}
+canvas{display:block;width:100%;aspect-ratio:16/10;max-width:100%;border-radius:6px;background:var(--surface);border:1px solid var(--rule);touch-action:none}
+.text{min-width:0;display:grid;gap:12px;align-content:start}
+.step{font-family:var(--f-mono);font-size:var(--s1);color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+h2{font-family:var(--f-display);font-weight:600;font-size:var(--s4);line-height:1.2;margin:0;text-wrap:balance}
+.text p{margin:0;max-width:62ch}
+.eq{font-family:var(--f-display);font-size:1.2rem;background:var(--surface);border:1px solid var(--rule);border-radius:6px;
+  padding:12px 14px;overflow-x:auto;white-space:nowrap}
+.eq small{display:block;font-family:var(--f-body);font-size:var(--s1);color:var(--muted);white-space:normal;margin-top:4px}
+.sym{font-family:var(--f-display);font-style:italic}
+sub,sup{font-size:.72em;line-height:0}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.ctl{display:grid;gap:2px;min-width:0;flex:1 1 170px}
+.ctl label{font-size:var(--s1);color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.ctl label output{font-family:var(--f-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select{font:inherit;font-size:var(--s1);padding:6px 8px;border-radius:6px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);max-width:100%}
+button{font:inherit;font-size:var(--s1);font-weight:500;cursor:pointer;border-radius:6px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--ink);padding:6px 12px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;border-right:1px solid var(--rule)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.readout div{background:var(--surface);padding:8px 10px;display:grid;gap:1px}
+.readout span{font-size:.75rem;color:var(--muted)}
+.readout strong{font-family:var(--f-mono);font-weight:500;font-size:1rem;font-variant-numeric:tabular-nums}
+.calc{font-family:var(--f-mono);font-size:var(--s1);background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:12px 14px;
+  display:grid;gap:4px;overflow-x:auto;font-variant-numeric:tabular-nums}
+.calc .res{color:var(--accent);font-weight:500;font-size:var(--s2)}
+.note a{color:var(--accent)}
+.note{font-size:var(--s1);color:var(--muted);border-left:2px solid var(--rule);padding-left:10px}
+.flag{font-family:var(--f-mono);font-size:.75rem;padding:2px 8px;border-radius:999px;border:1px solid currentColor;justify-self:start}
+.flag.ok{color:var(--accent)} .flag.warn{color:var(--hot)}
+ol.how{margin:0;padding-left:1.3em;display:grid;gap:4px;max-width:62ch}
+canvas.short{aspect-ratio:16/7}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--surface)}
+.tbl table{border-collapse:collapse;width:100%;font-size:var(--s1)}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+.tbl tr:last-child th,.tbl tr:last-child td{border-bottom:0}
+.tbl thead th{font-weight:600;color:var(--accent)}
+.tbl tbody th{font-weight:500;color:var(--muted);white-space:nowrap}
+footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font-size:var(--s1);max-width:80ch}
+.tdg{margin:0;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;display:grid;gap:6px;max-width:520px}
+.tdg svg{width:100%;height:auto;display:block}
+.tdg figcaption{font-size:var(--s1);color:var(--muted)}
+.tdg .mat{fill:var(--plate)} .tdg .cr{fill:var(--bg);stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round}
+.tdg .ax{stroke:var(--ink);stroke-width:1.3;fill:none} .tdg .ahd{fill:var(--ink)}
+.tdg .rr{stroke:var(--accent);stroke-width:2;stroke-dasharray:5 4} .tdg .arc{stroke:var(--accent);stroke-width:1.6;fill:none}
+.tdg .pt{fill:var(--hot)} .tdg .tip{fill:var(--hot)}
+.tdg text{font-family:var(--f-body);font-size:12px} .tdg .lbl{fill:var(--ink);font-family:var(--f-display);font-style:italic;font-size:16px}
+.tdg .acc{fill:var(--accent)} .tdg .mut{fill:var(--muted);font-size:11px}
+.ssy{display:grid;gap:12px;border-top:1px solid var(--rule);padding-top:14px}
+.ssy h3{font-family:var(--f-display);font-weight:600;font-size:1.15rem;margin:0}
+.ssy p{margin:0;max-width:62ch}
+.ssy-figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.ssy .kz{fill:var(--accent);fill-opacity:.14;stroke:var(--accent);stroke-width:1.5;stroke-dasharray:5 4}
+.ssy .pz{fill:var(--hot);fill-opacity:.45;stroke:var(--hot);stroke-width:1.5}
+.ssy .gr{stroke:var(--rule);stroke-width:1} .ssy .tk{fill:var(--muted);font-family:var(--f-mono);font-size:10px}
+.ssy .elc{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:5 4} .ssy .plc{fill:none;stroke:var(--hot);stroke-width:2.4}
+.ssy .shed{fill:var(--accent);fill-opacity:.2} .ssy .carry{fill:var(--hot);fill-opacity:.18}
+.ssy .ry{stroke:var(--accent);stroke-dasharray:2 3} .ssy .rp{stroke:var(--hot);stroke-dasharray:2 3}
+.ssy .hot{fill:var(--hot)} .ssy .tk.acc{fill:var(--accent)}
+.eq{position:relative;padding-right:56px}
+.eqno{position:absolute;right:12px;top:12px;font-family:var(--f-mono);font-size:var(--s1);color:var(--muted);font-style:normal}
+.eq small.src{color:var(--accent)}
+a.cite{color:var(--accent);text-decoration:none;font-family:var(--f-mono);font-size:.82em;margin-left:2px;white-space:nowrap}
+a.cite:hover{text-decoration:underline}
+.refs{border-top:1px solid var(--rule);padding-block:28px;display:grid;gap:10px}
+.refs h2{margin:0}
+.refs ol{margin:0;padding-left:1.8em;display:grid;gap:6px;max-width:90ch;font-size:var(--s1)}
+.refs li:target{background:var(--surface);outline:1px solid var(--accent);border-radius:4px}
+.cbar{display:grid;grid-template-columns:auto auto minmax(80px,1fr) auto;align-items:center;gap:8px;font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.cbar i{height:10px;border-radius:2px;border:1px solid var(--rule);background:linear-gradient(to right,#00008f,#0000ff,#00ffff,#ffff00,#ff0000,#800000)}
+.cbar .cbl{color:var(--ink)}
+.cfig{margin:0;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:8px;display:grid;gap:6px}
+.cfig img{width:100%;height:auto;display:block;background:#fff;border-radius:3px}
+.cfig figcaption{font-size:var(--s1);color:var(--muted)}
+
+a.back{color:var(--accent);text-decoration:none;text-transform:none;letter-spacing:0}
+a.back:hover{text-decoration:underline}
+section.scene.one{grid-template-columns:minmax(0,1fr)}
+section.scene.one .text p, section.scene.one .tbl{max-width:80ch}
+.tdg.wide{max-width:600px}
+.eq.wrap{white-space:normal}
+.tbox{display:grid;gap:10px;background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:6px;padding:14px 16px}
+.tbox h3{font-family:var(--f-display);font-weight:600;font-size:1.1rem;margin:0}
+.tbox p{margin:0;max-width:62ch}
+@media (max-width:560px){ #mc{aspect-ratio:4/5} }
+[hidden]{display:none!important}
+ol.how>li{min-width:0} ol.how .eq{margin-top:6px}
+.tdg .gam{fill:none;stroke:var(--accent);stroke-width:2.4}
+.tdg .gam2{fill:none;stroke:var(--hot);stroke-width:2.4}
+.tdg .area{fill:var(--accent);fill-opacity:.13}
+.tdg .face{stroke:var(--ink);stroke-width:1.6;stroke-dasharray:4 3}
+.tdg .dsx{fill:none;stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.tdg .nrm{stroke:var(--accent);stroke-width:1.8} .tdg .trc{stroke:var(--hot);stroke-width:1.8}
+.tdg .dir{fill:none;stroke:var(--accent);stroke-width:1.6} .tdg .dir2{fill:none;stroke:var(--hot);stroke-width:1.6}
+.tdg .ahh{fill:var(--hot)} .tdg .aha{fill:var(--accent)} .tdg .hot{fill:var(--hot)}
+
+/* full-width introduction and author credit */
+header h1,header .lede{max-width:none}
+.credit{margin:0;font-size:.8125rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px}
+.credit b{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+  <div class="eyebrow"><a class="back" href="crack-tip-stress-intensity.html">← Stress intensity at the crack tip</a> · Elastic–plastic fracture mechanics</div>
+  <h1>The <em>J-integral</em></h1>
+  <p class="lede">When the plastic zone is no longer small, K stops describing the crack tip. The J-integral replaces it. This page defines J term by term, integrates it live around contours you choose, shows why it does not depend on the path, and links every step back to K for elastic materials.</p>
+  <p class="credit"><b>Author:</b> Dr Régis Kubler, Arts et Métiers Institute of Technology. Developed with the assistance of Claude Opus 5.5 (Anthropic), October 2026. Code: MIT · Documentation: CC BY 4.0.</p>
+  <nav class="toc" aria-label="Sections">
+    <a href="index.html"><b>⌂</b>Home</a>
+    <a href="#j1"><b>1</b>Beyond K</a>
+    <a href="#j2"><b>2</b>Definition</a>
+    <a href="#j3"><b>3</b>Live contour</a>
+    <a href="#j4"><b>4</b>Path independence</a>
+    <a href="#j5"><b>5</b>J and K</a>
+    <a href="#j6"><b>6</b>HRR field</a>
+    <a href="#j7"><b>7</b>J from a test</a>
+    <a href="crack-tip-fe-fracture.html"><b>+</b>K and J in FE software</a>
+    <a href="#refs"><b>§</b>References</a>
+  </nav>
+</header>
+
+<!-- 1 -->
+<section class="scene one" id="j1">
+  <div class="text">
+    <div class="step">Section 1 · Why a new parameter</div>
+    <h2>K needs small-scale yielding; ductile materials break it</h2>
+    <p>LEFM works while the plastic zone r<sub>p</sub> = (1/π)(K/σ<sub>ys</sub>)² sits deep inside the region where the elastic K field holds. Tough, ductile materials such as structural steels, stainless steels and aluminium alloys at room temperature often yield over a zone comparable to the crack length or the ligament before they fail. Then the K field is destroyed over the very region that controls fracture, and K measured or computed elastically no longer characterises the crack tip.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Regime</th><th>Plastic zone</th><th>Parameter that controls the tip</th></tr></thead>
+      <tbody>
+        <tr><th>Small-scale yielding</th><td>r<sub>p</sub> ≪ a, W − a, B</td><td>K (and J = K²/E′)</td></tr>
+        <tr><th>Elastic–plastic</th><td>r<sub>p</sub> comparable to the ligament</td><td>J (or CTOD)</td></tr>
+        <tr><th>Fully plastic</th><td>whole ligament yields</td><td>J, with care: limit-load and constraint effects</td></tr>
+      </tbody></table></div>
+    <p>Rice <a class="cite" href="#ref1">[1]</a> proposed J in 1968, building on Eshelby's energy–momentum tensor <a class="cite" href="#ref2">[2]</a>; Cherepanov <a class="cite" href="#ref3">[3]</a> reached the same integral independently. J is defined for any nonlinear elastic material, it reduces exactly to the elastic energy release rate G = K²/E′ when the material is linear, and Hutchinson, Rice and Rosengren <a class="cite" href="#ref4">[4]</a><a class="cite" href="#ref5">[5]</a> showed that it is the amplitude of the crack-tip field in a hardening plastic material. That makes J the elastic–plastic counterpart of K.</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="scene" id="j2">
+  <div class="fig">
+    <figure class="tdg wide"><svg viewBox="0 0 360 230" role="img" aria-label="Contour Gamma around a crack tip, with arc element ds, outward normal n and traction T">
+      <defs><marker id="jah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="ahd"/></marker>
+        <marker id="jahh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="ahh"/></marker>
+        <marker id="jaha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="aha"/></marker></defs>
+      <rect class="mat" x="0" y="0" width="360" height="230"/>
+      <path class="cr" d="M0 111 L190 115 L0 119"/>
+      <path class="ax" d="M190 115 H345" marker-end="url(#jah)"/><path class="ax" d="M190 115 V18" marker-end="url(#jah)"/>
+      <text class="lbl" x="347" y="132">x</text><text class="lbl" x="198" y="26">y</text>
+      <path class="gam" d="M110 119 A80 80 0 1 0 110 111"/>
+      <text class="lbl acc" x="250" y="190">Γ</text>
+      <circle class="tip" cx="190" cy="115" r="3.5"/>
+      <path class="dsx" d="M248.2 59.9 A80 80 0 0 1 262 75"/>
+      <line class="nrm" x1="255.6" y1="67" x2="282" y2="44" marker-end="url(#jaha)"/><text class="lbl acc" x="284" y="42">n</text>
+      <line class="trc" x1="255.6" y1="67" x2="262" y2="30" marker-end="url(#jahh)"/><text class="lbl hot" x="258" y="24">T</text>
+      <text class="mut" x="232" y="80">ds</text>
+      <text class="mut" x="8" y="104">upper face</text><text class="mut" x="8" y="136">lower face</text>
+      <text class="mut" x="116" y="138">start</text><text class="mut" x="118" y="100">end</text>
+      <path class="dir" d="M266 175 A80 80 0 0 0 268 165" marker-end="url(#jaha)"/>
+    </svg><figcaption>Γ runs anticlockwise from the lower crack face to the upper crack face around the tip. ds is an element of arc, n the outward unit normal, and T = σ·n the traction that the material outside Γ exerts on the material inside.</figcaption></figure>
+  </div>
+  <div class="text">
+    <div class="step">Section 2 · Definition</div>
+    <h2>J is an energy flux into the crack tip</h2>
+    <div class="eq"><span class="eqno">(1)</span>J = ∫<sub>Γ</sub> ( W dy − T<sub>i</sub> ∂u<sub>i</sub>/∂x ds )
+      <small>Γ is any path from the lower to the upper crack face around the tip, anticlockwise; x is along the crack.</small>
+      <small class="src">Source: Rice <a class="cite" href="#ref1">[1]</a>; Anderson <a class="cite" href="#ref11">[11]</a> §3.2</small></div>
+    <div class="tbl"><table>
+      <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><th>W = ∫<sub>0</sub><sup>ε</sup> σ<sub>ij</sub> dε<sub>ij</sub></th><td>Strain energy density, the work stored per unit volume. For a linear elastic material W = ½σ<sub>ij</sub>ε<sub>ij</sub>.</td></tr>
+        <tr><th>W dy</th><td>Strain energy carried across Γ as the crack (and the field around it) translates by da in x. Only the y-component of the path matters: dy = n<sub>x</sub> ds.</td></tr>
+        <tr><th>T<sub>i</sub> = σ<sub>ij</sub> n<sub>j</sub></th><td>Traction acting on Γ from the outside: T<sub>x</sub> = σ<sub>xx</sub>n<sub>x</sub> + τ<sub>xy</sub>n<sub>y</sub>, T<sub>y</sub> = τ<sub>xy</sub>n<sub>x</sub> + σ<sub>yy</sub>n<sub>y</sub>.</td></tr>
+        <tr><th>∂u<sub>i</sub>/∂x</th><td>Rate at which the displacement changes as the field moves with the crack. T<sub>i</sub>∂u<sub>i</sub>/∂x ds is the work done by the tractions per unit crack advance.</td></tr>
+        <tr><th>J</th><td>Units of energy per unit area (J/m², often kJ/m²; equivalently MPa·m). It is the energy flowing through Γ towards the tip per unit crack extension.</td></tr>
+      </tbody></table></div>
+    <p>For a nonlinear elastic body J equals the rate of decrease of potential energy Π with crack area, per unit thickness <a class="cite" href="#ref1">[1]</a>:</p>
+    <div class="eq"><span class="eqno">(2)</span>J = − dΠ/da
+      <small>For a linear elastic body this is exactly Griffith–Irwin's energy release rate G, which is why J connects directly to K (Section 5).</small>
+      <small class="src">Source: Rice <a class="cite" href="#ref1">[1]</a>; Anderson <a class="cite" href="#ref11">[11]</a> §3.2.1</small></div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="scene" id="j3">
+  <div class="fig">
+    <canvas id="jc" aria-label="Crack-tip field with the integration contour and a tracer moving along it"></canvas>
+    <div class="cbar" id="jcb" aria-label="Colour scale"><span class="cbl">σyy, MPa</span><span>0</span><i></i><span>—</span></div>
+    <div class="controls"><label class="ctl" style="flex:0 1 auto">Colour map<select id="jcomp"><option value="sxx">σxx (contains T)</option><option value="syy">σyy (no T)</option><option value="txy">τxy (no T)</option><option value="vm" selected>von Mises (contains T)</option></select></label></div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Contour shape">
+        <button data-shape="circle" aria-pressed="true">Circle</button><button data-shape="rect" aria-pressed="false">Rectangle</button><button data-shape="loop" aria-pressed="false">Loop away from tip</button>
+      </div>
+      <button class="primary" id="jplay">Pause</button>
+    </div>
+    <div class="controls" id="jsize">
+      <div class="ctl" data-for="circle"><label for="jR">Radius R <output id="jRo"></output></label><input type="range" id="jR" min="0.6" max="4.6" step="0.1" value="2.5"></div>
+      <div class="ctl" data-for="rect" hidden><label for="jx1">Left edge x₁ <output id="jx1o"></output></label><input type="range" id="jx1" min="-7.5" max="-0.5" step="0.1" value="-3"></div>
+      <div class="ctl" data-for="rect" hidden><label for="jx2">Right edge x₂ <output id="jx2o"></output></label><input type="range" id="jx2" min="0.5" max="7.5" step="0.1" value="5"></div>
+      <div class="ctl" data-for="rect" hidden><label for="jh">Half-height h <output id="jho"></output></label><input type="range" id="jh" min="0.4" max="4.6" step="0.1" value="2"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="jK">Applied K<sub>I</sub> <output id="jKo"></output></label><input type="range" id="jK" min="10" max="100" step="1" value="50"></div>
+      <div class="ctl"><label for="jT">T-stress (Williams σ<sub>xx</sub> term, not the traction) <output id="jTo"></output></label><input type="range" id="jT" min="-300" max="300" step="10" value="0"></div>
+      <div class="seg" role="group" aria-label="Stress state"><button data-st="pe" aria-pressed="true">Plane strain</button><button data-st="ps" aria-pressed="false">Plane stress</button></div>
+    </div>
+    <canvas id="jc2" class="short" aria-label="Cumulative contributions to J along the contour"></canvas>
+    <div class="readout">
+      <div><span>∫ W dy</span><strong id="oj1">—</strong></div>
+      <div><span>−∫ T<sub>i</sub> ∂u<sub>i</sub>/∂x ds</span><strong id="oj2">—</strong></div>
+      <div><span>J = sum</span><strong id="oj">—</strong></div>
+      <div><span>K²/E′</span><strong id="ojk">—</strong></div>
+    </div>
+  </div>
+  <div class="text">
+    <div class="step">Section 3 · Computing J</div>
+    <h2>Integrate around the tip and watch the terms</h2>
+    <p>The figure evaluates equation (1) numerically on the exact mode I field of Williams and Irwin <a class="cite" href="#ref12">[12]</a><a class="cite" href="#ref13">[13]</a>, the same field used on the stress intensity page, for a steel with E = 200 GPa and ν = 0.3. The tracer moves along Γ, showing the outward normal n (black arrow) and the traction T (magenta arrow). The lower chart accumulates the two terms as the tracer goes round.</p>
+    <ol class="how">
+      <li>At each point of Γ, compute the stresses σ<sub>ij</sub>, the strains ε<sub>ij</sub> from Hooke's law, and W = ½σ<sub>ij</sub>ε<sub>ij</sub>.</li>
+      <li>Compute the outward normal n, the traction T<sub>i</sub> = σ<sub>ij</sub>n<sub>j</sub>, and ∂u<sub>i</sub>/∂x from the displacement field.</li>
+      <li>Add W dy − T<sub>i</sub> ∂u<sub>i</sub>/∂x ds over all 1 200 path segments.</li>
+    </ol>
+    <p>Change the radius, switch to a rectangle and move its edges, or add a T-stress. Pick σ<sub>xx</sub> or von Mises in the colour map to see what T does: it adds only to σ<sub>xx</sub>, so the σ<sub>yy</sub> and τ<sub>xy</sub> maps do not move, while σ<sub>xx</sub> shifts everywhere. The von Mises map uses a fixed scale with red at σ<sub>Y</sub> = 500 MPa, so the red region is an elastic estimate of the plastic zone: it grows when T &lt; 0 and shrinks when T &gt; 0, even though J stays the same. This is the constraint effect described below. The T-stress slider is the constant σ<sub>xx</sub> = T term of the Williams expansion (second term, see the stress intensity page). It is not the traction vector T<sub>i</sub> = σ<sub>ij</sub>n<sub>j</sub> of equation (1), which is the magenta arrow. The two terms change, sometimes a lot, but their sum stays equal to K²/E′. Choose the loop that does not enclose the tip and J falls to zero. That is path independence, explained in the next section.</p>
+    <div class="tbox">
+      <h3>What the T-stress means physically</h3>
+      <p>T is a uniform stress parallel to the crack, the first non-singular term of the Williams expansion: σ<sub>xx</sub> = K/√(2πr)·f<sub>xx</sub>(θ) + T <a class="cite" href="#ref12">[12]</a>. It is the same at every distance r and comes from the remote loading and the geometry, not from the singularity. A centre crack under uniaxial tension normal to it has T = −σ; under biaxial loading T = σ<sub>xx</sub><sup>∞</sup> − σ<sub>yy</sub><sup>∞</sup>. Deep edge cracks in bending (SENB, CT) have T &gt; 0; short cracks and centre-cracked panels in tension have T &lt; 0. Geometries are compared through the biaxiality ratio B<sub>T</sub> = T√(πa)/K <a class="cite" href="#ref21">[21]</a>.</p>
+      <p><b>Why J does not change.</b> A stress parallel to the crack does not pull the faces apart, so it feeds no energy to the tip. In equation (1) the T² part is a uniform field with no singularity inside Γ, so it integrates to zero, and the K·T cross term cancels between the upper and lower halves of Γ by symmetry. That is what the slider shows: the two terms move, the sum stays K²/E′.</p>
+      <p><b>Why it still matters: constraint.</b> T changes the triaxiality ahead of the tip <a class="cite" href="#ref17">[17]</a>. With T &gt; 0 (high constraint) the hydrostatic stress is higher, the plastic zone is smaller and leans forward, and the material shows its lower-bound toughness, as in deep-cracked test specimens. With T &lt; 0 (loss of constraint) the hydrostatic stress drops, the plastic zone grows, and the apparent toughness rises above K<sub>IC</sub> or J<sub>Ic</sub>, as in shallow cracks and thin panels. Two cracks with the same K or J can therefore fail at different loads. This is the basis of two-parameter fracture mechanics: J–T <a class="cite" href="#ref18">[18]</a> and J–Q <a class="cite" href="#ref19">[19]</a>.</p>
+      <p><b>Crack path.</b> T also affects directional stability: with T &gt; 0 a straight crack tends to kink away from its plane, with T &lt; 0 it stays straight <a class="cite" href="#ref20">[20]</a>.</p>
+    </div>
+    <p class="note">In a finite element code J is evaluated the same way, usually converted to an equivalent area integral over a ring of elements (the domain integral method), which is more accurate than a line integral through element nodes. The <a href="crack-tip-fe-fracture.html">FE software page</a> runs such a calculation live on a spider-web mesh.</p>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="scene" id="j4">
+  <div class="fig">
+    <figure class="tdg wide"><svg viewBox="0 0 360 230" role="img" aria-label="Closed contour formed by an outer path, the two crack faces and a reversed inner path">
+      <defs><marker id="pah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="aha"/></marker>
+        <marker id="pahh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="ahh"/></marker></defs>
+      <rect class="mat" x="0" y="0" width="360" height="230"/>
+      <path class="area" fill-rule="evenodd" d="M90 119 A100 100 0 1 0 90 111 L150 111 A40 40 0 1 1 150 119 Z"/>
+      <path class="cr" d="M0 111 L190 115 L0 119"/>
+      <path class="gam" d="M90 119 A100 100 0 1 0 90 111"/>
+      <path class="gam2" d="M150 111 A40 40 0 1 1 150 119"/>
+      <line class="face" x1="150" y1="111" x2="90" y2="111"/><line class="face" x1="90" y1="119" x2="150" y2="119"/>
+      <circle class="tip" cx="190" cy="115" r="3.5"/>
+      <text class="lbl acc" x="276" y="196">Γ₁</text><text class="lbl hot" x="214" y="162">Γ₂</text>
+      <text class="mut" x="92" y="104">Γ⁺ (face)</text><text class="mut" x="92" y="136">Γ⁻ (face)</text>
+      <text class="mut" x="228" y="40">shaded area A</text>
+      <path class="dir" d="M277 160 A100 100 0 0 0 285 140" marker-end="url(#pah)"/>
+      <path class="dir2" d="M216 135 A40 40 0 0 1 206 147" marker-end="url(#pahh)"/>
+    </svg><figcaption>The closed contour Γ* = Γ₁ + Γ⁺ − Γ₂ + Γ⁻ encloses the shaded area A but not the tip. Γ₂ is traversed backwards (clockwise).</figcaption></figure>
+  </div>
+  <div class="text">
+    <div class="step">Section 4 · Why J does not depend on Γ</div>
+    <h2>Path independence in four steps</h2>
+    <ol class="how">
+      <li><b>Closed contour.</b> Take two paths Γ₁ (outer) and Γ₂ (inner) and join them along the crack faces into the closed loop Γ* shown in the figure. The tip, where the field is singular, stays outside Γ*.</li>
+      <li><b>Divergence theorem.</b> With dy = n<sub>x</sub> ds the integrand of (1) is a flux, so
+        <div class="eq wrap"><span class="eqno">(3)</span>∮<sub>Γ*</sub> ( W n<sub>x</sub> − σ<sub>ij</sub> n<sub>j</sub> ∂u<sub>i</sub>/∂x ) ds = ∫<sub>A</sub> [ ∂W/∂x − ∂(σ<sub>ij</sub> ∂u<sub>i</sub>/∂x)/∂x<sub>j</sub> ] dA
+          <small class="src">Source: Rice <a class="cite" href="#ref1">[1]</a>; Anderson <a class="cite" href="#ref11">[11]</a> Appendix 3.2</small></div></li>
+      <li><b>The area integrand vanishes.</b> If W depends only on strain (elastic, or deformation plasticity), ∂W/∂x = σ<sub>ij</sub> ∂ε<sub>ij</sub>/∂x. Compatibility gives σ<sub>ij</sub>∂ε<sub>ij</sub>/∂x = σ<sub>ij</sub> ∂/∂x<sub>j</sub>(∂u<sub>i</sub>/∂x), and equilibrium without body forces, ∂σ<sub>ij</sub>/∂x<sub>j</sub> = 0, makes this equal to ∂(σ<sub>ij</sub>∂u<sub>i</sub>/∂x)/∂x<sub>j</sub>. The bracket is zero, so ∮<sub>Γ*</sub> = 0.</li>
+      <li><b>The crack faces contribute nothing.</b> On flat, traction-free faces dy = 0 and T<sub>i</sub> = 0, so both terms vanish on Γ⁺ and Γ⁻. What is left is J(Γ₁) − J(Γ₂) = 0.</li>
+    </ol>
+    <div class="eq"><span class="eqno">(4)</span>J(Γ₁) = J(Γ₂) for any two paths around the tip
+      <small>The "Loop away from tip" contour in Section 3 is a closed Γ* with nothing singular inside: its J is zero up to round-off.</small>
+      <small class="src">Source: Rice <a class="cite" href="#ref1">[1]</a></small></div>
+    <p>Path independence is the practical strength of J. Γ can be taken far from the tip, where the stresses and strains are accurately known from a coarse mesh or from measurements, and J still describes the tip.</p>
+    <p class="note"><b>When it fails:</b> unloading or non-proportional loading in real (incremental) plasticity, because W is then no longer a function of strain alone; crack growth, which unloads material behind the tip; thermal strains; body forces; tractions or pressure on the crack faces; and curved crack faces. Extra terms must then be added, or J is evaluated close to the tip.</p>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="scene" id="j5">
+  <div class="text">
+    <div class="step">Section 5 · J for elastic materials</div>
+    <h2>In a linear elastic body, J is K²/E′</h2>
+    <p>Because J = −dΠ/da = G, Irwin's relation between G and K <a class="cite" href="#ref13">[13]</a> gives J directly from the stress intensity factors. Section 3 verifies it numerically: whatever the contour, the integral of the Williams field returns K²/E′.</p>
+    <div class="eq"><span class="eqno">(5)</span>J = G = K<sub>I</sub>² / E′ &nbsp; (mode I)
+      <small>E′ = E in plane stress, E/(1 − ν²) in plane strain. Units: (MPa√m)²/MPa = MPa·m = MJ/m².</small>
+      <small class="src">Source: Rice <a class="cite" href="#ref1">[1]</a>; Irwin <a class="cite" href="#ref13">[13]</a></small></div>
+    <div class="eq"><span class="eqno">(6)</span>J = (K<sub>I</sub>² + K<sub>II</sub>²)/E′ + K<sub>III</sub>²/2μ
+      <small>Mixed mode: the energies add, the K's do not.</small>
+      <small class="src">Source: Anderson <a class="cite" href="#ref11">[11]</a> §3.2</small></div>
+    <div class="eq"><span class="eqno">(7)</span>K<sub>J</sub> = √(J E′)
+      <small>The reverse relation. A toughness measured as J<sub>Ic</sub> on an elastic–plastic test is often reported as an equivalent K<sub>Jc</sub> so it can be compared with K<sub>IC</sub>.</small>
+      <small class="src">Source: ASTM E1820 <a class="cite" href="#ref9">[9]</a></small></div>
+  </div>
+  <div class="fig">
+    <div class="calc" id="jcalc"></div>
+    <div class="controls">
+      <div class="ctl"><label for="cK">K<sub>I</sub> <output id="cKo"></output></label><input type="range" id="cK" min="1" max="150" step="0.1" value="38.6"></div>
+      <div class="ctl"><label for="cE">E <output id="cEo"></output></label><input type="range" id="cE" min="2" max="400" step="1" value="114"></div>
+      <div class="ctl"><label for="cn">ν <output id="cno"></output></label><input type="range" id="cn" min="0" max="0.5" step="0.01" value="0.34"></div>
+      <div class="seg" role="group" aria-label="Stress state"><button data-cst="pe" aria-pressed="true">Plane strain</button><button data-cst="ps" aria-pressed="false">Plane stress</button></div>
+    </div>
+    <p class="note">Default values: the Ti-6Al-4V example from scene 6 of the stress intensity page, K = 38.6 MPa√m, E = 114 GPa, ν = 0.34. The same crack, the same energy: J is just K written as an energy.</p>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="scene" id="j6">
+  <div class="fig">
+    <canvas id="hc" aria-label="Log-log plot of stress, strain and their product versus distance from the tip for a power-law hardening material"></canvas>
+    <div class="controls">
+      <div class="ctl"><label for="hn">Hardening exponent n <output id="hno"></output></label><input type="range" id="hn" min="1" max="20" step="1" value="5"></div>
+    </div>
+    <div class="readout">
+      <div><span>σ ∝ r^…</span><strong id="ohs">—</strong></div>
+      <div><span>ε ∝ r^…</span><strong id="ohe">—</strong></div>
+      <div><span>σ·ε ∝ r^…</span><strong id="ohw">−1</strong></div>
+    </div>
+  </div>
+  <div class="text">
+    <div class="step">Section 6 · Elastic–plastic crack tips</div>
+    <h2>J is the amplitude of the HRR field</h2>
+    <p>Model the material with the Ramberg–Osgood law <a class="cite" href="#ref7">[7]</a>, where n is the strain-hardening exponent (n = 1 is linear, n → ∞ is perfectly plastic):</p>
+    <div class="eq"><span class="eqno">(8)</span>ε/ε<sub>0</sub> = σ/σ<sub>0</sub> + α (σ/σ<sub>0</sub>)<sup>n</sup>
+      <small>σ<sub>0</sub> is a reference (yield) stress, ε<sub>0</sub> = σ<sub>0</sub>/E, α a dimensionless constant.</small>
+      <small class="src">Source: Ramberg &amp; Osgood <a class="cite" href="#ref7">[7]</a></small></div>
+    <p>For J to be finite and path-independent, W ∝ σε must vary as 1/r near the tip. Combined with (8), this fixes the singularity found by Hutchinson <a class="cite" href="#ref4">[4]</a> and Rice and Rosengren <a class="cite" href="#ref5">[5]</a>:</p>
+    <div class="eq"><span class="eqno">(9)</span>σ<sub>ij</sub> = σ<sub>0</sub> ( EJ / (α σ<sub>0</sub>² I<sub>n</sub> r) )<sup>1/(n+1)</sup> σ̃<sub>ij</sub>(n, θ)
+      <small>ε<sub>ij</sub> = α ε<sub>0</sub> ( EJ / (α σ<sub>0</sub>² I<sub>n</sub> r) )<sup>n/(n+1)</sup> ε̃<sub>ij</sub>(n, θ). I<sub>n</sub> (about 4 to 6 for practical n) and the angular functions σ̃<sub>ij</sub>, ε̃<sub>ij</sub> are tabulated numerically.</small>
+      <small class="src">Source: Hutchinson <a class="cite" href="#ref4">[4]</a>; Rice &amp; Rosengren <a class="cite" href="#ref5">[5]</a>; Shih <a class="cite" href="#ref6">[6]</a></small></div>
+    <p>J plays exactly the role K plays in LEFM: it is the single amplitude of a universal near-tip field. Set n = 1 in the figure and the stress slope returns to −½, the elastic 1/√r singularity, with J = K²/E′. The product σε always has slope −1, whatever n.</p>
+    <div class="eq"><span class="eqno">(10)</span>J = d<sub>n</sub> σ<sub>0</sub> δ<sub>t</sub> &nbsp;⇔&nbsp; δ<sub>t</sub> = J / (m σ<sub>0</sub>)
+      <small>Crack-tip opening displacement (CTOD). d<sub>n</sub> ranges from about 0.3 to 0.8 depending on n and the stress state, so m ≈ 1 to 2.</small>
+      <small class="src">Source: Shih <a class="cite" href="#ref6">[6]</a></small></div>
+    <p class="note"><b>J-dominance.</b> The HRR field holds in an annulus around the tip, just as the K field does in LEFM. Very close to the tip, large deformation and blunting take over (within about 2δ<sub>t</sub>). Far away, the specimen geometry matters. A single-parameter J description needs the annulus to exist, which ASTM E1820 <a class="cite" href="#ref9">[9]</a> enforces with size limits such as B, b<sub>0</sub> &gt; 10 J<sub>Q</sub>/σ<sub>Y</sub>.</p>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="scene" id="j7">
+  <div class="fig">
+    <canvas id="mc" aria-label="Load versus load-line displacement for a bend specimen with the plastic work shaded"></canvas>
+    <div class="controls">
+      <button class="primary" id="mplay">Pause</button>
+      <div class="ctl"><label for="mn">Hardening exponent n <output id="mno"></output></label><input type="range" id="mn" min="3" max="15" step="1" value="8"></div>
+    </div>
+    <div class="readout">
+      <div><span>Load P</span><strong id="omP">—</strong></div>
+      <div><span>K from P</span><strong id="omK">—</strong></div>
+      <div><span>J<sub>el</sub> = K²/E′</span><strong id="omJe">—</strong></div>
+      <div><span>J<sub>pl</sub> = η U<sub>pl</sub>/(B b<sub>0</sub>)</span><strong id="omJp">—</strong></div>
+      <div><span>J = J<sub>el</sub> + J<sub>pl</sub></span><strong id="omJ">—</strong></div>
+      <div><span>K<sub>J</sub> = √(JE′)</span><strong id="omKJ">—</strong></div>
+    </div>
+  </div>
+  <div class="text">
+    <div class="step">Section 7 · Measuring J</div>
+    <h2>J from the area under a load–displacement record</h2>
+    <p>Path independence means J can also be obtained from global quantities. For a deeply cracked bend specimen almost all plastic work goes into the ligament, and Rice, Paris and Merkle <a class="cite" href="#ref8">[8]</a> showed that J follows from the area under the load–displacement curve. ASTM E1820 <a class="cite" href="#ref9">[9]</a> splits J into an elastic part, computed from K exactly as in LEFM, and a plastic part:</p>
+    <div class="eq"><span class="eqno">(11)</span>J = K²(1 − ν²)/E + η<sub>pl</sub> U<sub>pl</sub> / (B b<sub>0</sub>)
+      <small>U<sub>pl</sub> is the plastic area under P–Δ (shaded), B the thickness, b<sub>0</sub> = W − a<sub>0</sub> the ligament, η<sub>pl</sub> = 1.9 for a single-edge bend specimen.</small>
+      <small class="src">Source: Rice, Paris &amp; Merkle <a class="cite" href="#ref8">[8]</a>; ASTM E1820 <a class="cite" href="#ref9">[9]</a></small></div>
+    <div class="eq"><span class="eqno">(12)</span>K = P S / (B W<sup>3/2</sup>) · f(a/W)
+      <small>f(a/W) = 3(a/W)<sup>½</sup>[1.99 − (a/W)(1 − a/W)(2.15 − 3.93a/W + 2.7(a/W)²)] / [2(1 + 2a/W)(1 − a/W)<sup>3/2</sup>], three-point bending with span S = 4W.</small>
+      <small class="src">Source: ASTM E399 <a class="cite" href="#ref10">[10]</a>; Tada et al. <a class="cite" href="#ref16">[16]</a></small></div>
+    <p>The record in the figure is illustrative: a steel bend bar with W = 50 mm, B = 25 mm, a<sub>0</sub>/W = 0.5, S = 200 mm, E = 200 GPa, σ<sub>Y</sub> = 500 MPa, with a Ramberg–Osgood-type plastic response. Early in the test J ≈ J<sub>el</sub> = K²/E′, the LEFM value. As the ligament yields, J<sub>pl</sub> takes over and K computed elastically underestimates the crack driving force.</p>
+    <p class="note">In design, J is estimated without a test from handbook solutions of the same J<sub>el</sub> + J<sub>pl</sub> form (the EPRI method of Kumar, German and Shih <a class="cite" href="#ref14">[14]</a>). The fracture criterion is J ≥ J<sub>Ic</sub>, or a J–R resistance curve for stable tearing, as introduced by Begley and Landes <a class="cite" href="#ref15">[15]</a>.</p>
+  </div>
+</section>
+
+<section class="refs" id="refs">
+  <h2>References</h2>
+  <ol>
+    <li id="ref1">J. R. Rice (1968). A path independent integral and the approximate analysis of strain concentration by notches and cracks. <i>Journal of Applied Mechanics</i> 35, 379–386.</li>
+    <li id="ref2">J. D. Eshelby (1951). The force on an elastic singularity. <i>Philosophical Transactions of the Royal Society A</i> 244, 87–112.</li>
+    <li id="ref3">G. P. Cherepanov (1967). Crack propagation in continuous media. <i>Journal of Applied Mathematics and Mechanics (PMM)</i> 31, 503–512.</li>
+    <li id="ref4">J. W. Hutchinson (1968). Singular behaviour at the end of a tensile crack in a hardening material. <i>Journal of the Mechanics and Physics of Solids</i> 16, 13–31.</li>
+    <li id="ref5">J. R. Rice, G. F. Rosengren (1968). Plane strain deformation near a crack tip in a power-law hardening material. <i>Journal of the Mechanics and Physics of Solids</i> 16, 1–12.</li>
+    <li id="ref6">C. F. Shih (1981). Relationships between the J-integral and the crack opening displacement for stationary and extending cracks. <i>Journal of the Mechanics and Physics of Solids</i> 29, 305–326.</li>
+    <li id="ref7">W. Ramberg, W. R. Osgood (1943). Description of stress–strain curves by three parameters. <i>NACA Technical Note</i> 902.</li>
+    <li id="ref8">J. R. Rice, P. C. Paris, J. G. Merkle (1973). Some further results of J-integral analysis and estimates. In <i>ASTM STP 536</i>, 231–245.</li>
+    <li id="ref9">ASTM E1820. Standard test method for measurement of fracture toughness. ASTM International.</li>
+    <li id="ref10">ASTM E399. Standard test method for linear-elastic plane-strain fracture toughness of metallic materials. ASTM International.</li>
+    <li id="ref11">T. L. Anderson (2017). <i>Fracture Mechanics: Fundamentals and Applications</i>, 4th ed. CRC Press, Boca Raton.</li>
+    <li id="ref12">M. L. Williams (1957). On the stress distribution at the base of a stationary crack. <i>Journal of Applied Mechanics</i> 24, 109–114.</li>
+    <li id="ref13">G. R. Irwin (1957). Analysis of stresses and strains near the end of a crack traversing a plate. <i>Journal of Applied Mechanics</i> 24, 361–364.</li>
+    <li id="ref14">V. Kumar, M. D. German, C. F. Shih (1981). <i>An Engineering Approach for Elastic–Plastic Fracture Analysis</i>. EPRI Report NP-1931, Electric Power Research Institute, Palo Alto.</li>
+    <li id="ref15">J. A. Begley, J. D. Landes (1972). The J integral as a fracture criterion. In <i>ASTM STP 514</i>, 1–20.</li>
+    <li id="ref16">H. Tada, P. C. Paris, G. R. Irwin (2000). <i>The Stress Analysis of Cracks Handbook</i>, 3rd ed. ASME Press, New York.</li>
+    <li id="ref17">S. G. Larsson, A. J. Carlsson (1973). Influence of non-singular stress terms and specimen geometry on small-scale yielding at crack tips in elastic–plastic materials. <i>Journal of the Mechanics and Physics of Solids</i> 21, 263–277.</li>
+    <li id="ref18">C. Betegón, J. W. Hancock (1991). Two-parameter characterization of elastic–plastic crack-tip fields. <i>Journal of Applied Mechanics</i> 58, 104–110.</li>
+    <li id="ref19">N. P. O'Dowd, C. F. Shih (1991). Family of crack-tip fields characterized by a triaxiality parameter — I. Structure of fields. <i>Journal of the Mechanics and Physics of Solids</i> 39, 989–1015.</li>
+    <li id="ref20">B. Cotterell, J. R. Rice (1980). Slightly curved or kinked cracks. <i>International Journal of Fracture</i> 16, 155–169.</li>
+    <li id="ref21">P. S. Leevers, J. C. Radon (1982). Inherent stress biaxiality in various fracture specimen geometries. <i>International Journal of Fracture</i> 19, 311–325.</li>
+  </ol>
+  <p class="note">Equation numbers are local to this page. Use the back link at the top to return to the stress intensity page.</p>
+</section>
+<footer>Section 3 integrates the exact Williams–Irwin mode I field (with an optional T-stress) numerically with 1 200 segments; the result matches K²/E′ to better than 0.01%. The record in Section 7 is illustrative, not a measured test.</footer>
+</div>
+
+<script>
+(() => {
+const R = document.documentElement;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MONO = '"IBM Plex Mono", ui-monospace, Menlo, monospace';
+const SERIF = 'Spectral, Georgia, serif';
+const C = {};
+let LUTP, LUTN;
+const hex = h => { h = h.replace('#',''); if (h.length===3) h = [...h].map(c=>c+c).join(''); return [0,2,4].map(i=>parseInt(h.substr(i,2),16)); };
+function ramp(stops, n){ const o=new Uint8ClampedArray(n*3);
+  for(let i=0;i<n;i++){ const t=i/(n-1)*(stops.length-1), k=Math.min(stops.length-2,Math.floor(t)), f=t-k;
+    for(let c=0;c<3;c++) o[i*3+c]=stops[k][c]+(stops[k+1][c]-stops[k][c])*f; } return o; }
+function readTheme(){ const s=getComputedStyle(R);
+  ['bg','surface','ink','muted','rule','accent','hot','plate','cool','heat1','heat2','heat3'].forEach(k=>C[k]=s.getPropertyValue('--'+k).trim());
+  LUTP = ramp([C.plate,C.heat1,C.heat2,C.heat3].map(hex),256);
+  LUTN = ramp([C.plate,C.cool].map(hex),256);
+  scenes.forEach(s=>s.cv && (s.cv.dirty=true));
+}
+const scenes = [];
+// rainbow (jet) scale: blue = minimum, red = maximum
+const LUTR = ramp([[0,0,143],[0,0,255],[0,255,255],[255,255,0],[255,0,0],[128,0,0]],256);
+function paintT(data,p,t){ const i=Math.round(clamp(t,0,1)*255)*3; data[p]=LUTR[i]; data[p+1]=LUTR[i+1]; data[p+2]=LUTR[i+2]; data[p+3]=255; }
+// signed value s in [-1,1] -> rgb into data at index p
+function paint(data,p,s){ const lut = s>=0?LUTP:LUTN; const i = Math.min(255, Math.round(Math.abs(s)*255))*3;
+  data[p]=lut[i]; data[p+1]=lut[i+1]; data[p+2]=lut[i+2]; data[p+3]=255; }
+
+function makeCanvas(el){ const ctx=el.getContext('2d'); const o={el,ctx,w:0,h:0,dirty:true};
+  const fit=()=>{ const w=el.clientWidth, h=el.clientHeight, d=Math.min(2,window.devicePixelRatio||1);
+    if(!w||!h) return; el.width=Math.round(w*d); el.height=Math.round(h*d); o.w=w; o.h=h; ctx.setTransform(d,0,0,d,0,0); o.dirty=true; };
+  new ResizeObserver(fit).observe(el); fit(); return o; }
+
+const ease = t => t<0?0:t>1?1:t*t*(3-2*t);
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const fmt = (v,d=1) => (Math.abs(v)>=1e4? v.toExponential(2) : v.toFixed(d));
+function niceTicks(min,max,n){ const step0=(max-min)/n, mag=Math.pow(10,Math.floor(Math.log10(step0))), f=step0/mag;
+  const step=(f<1.5?1:f<3?2:f<7?5:10)*mag, out=[]; for(let v=Math.ceil(min/step-1e-9)*step; v<=max+1e-9; v+=step) out.push(+v.toFixed(10)); return out; }
+function axes(ctx,b,xd,yd,o={}){
+  const X=v=>b.x+(v-xd[0])/(xd[1]-xd[0])*b.w, Y=v=>b.y+b.h-(v-yd[0])/(yd[1]-yd[0])*b.h;
+  ctx.save(); ctx.lineWidth=1; ctx.font='11px '+MONO; ctx.fillStyle=C.muted;
+  const xt=o.xt||niceTicks(xd[0],xd[1],o.nx||5), yt=o.yt||niceTicks(yd[0],yd[1],o.ny||4);
+  ctx.strokeStyle=C.rule; ctx.globalAlpha=.7;
+  xt.forEach(v=>{ctx.beginPath();ctx.moveTo(X(v)+.5,b.y);ctx.lineTo(X(v)+.5,b.y+b.h);ctx.stroke();});
+  yt.forEach(v=>{ctx.beginPath();ctx.moveTo(b.x,Y(v)+.5);ctx.lineTo(b.x+b.w,Y(v)+.5);ctx.stroke();});
+  ctx.globalAlpha=1; ctx.strokeStyle=C.muted; ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(b.x,b.y+b.h); ctx.lineTo(b.x+b.w,b.y+b.h); ctx.stroke();
+  ctx.textAlign='center'; ctx.textBaseline='top'; xt.forEach(v=>ctx.fillText(o.xf?o.xf(v):String(v),X(v),b.y+b.h+4));
+  ctx.textAlign='right'; ctx.textBaseline='middle'; yt.forEach(v=>ctx.fillText(o.yf?o.yf(v):String(v),b.x-5,Y(v)));
+  if(o.xl){ctx.textAlign='right';ctx.textBaseline='top';ctx.fillText(o.xl,b.x+b.w,b.y+b.h+18);}
+  if(o.yl){ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText(o.yl,b.x+2,b.y-5);}
+  ctx.restore(); return {X,Y};
+}
+function arrow(ctx,x1,y1,x2,y2,hs=5){ const a=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-hs*Math.cos(a-.45),y2-hs*Math.sin(a-.45));ctx.lineTo(x2-hs*Math.cos(a+.45),y2-hs*Math.sin(a+.45));ctx.closePath();ctx.fill(); }
+function label(ctx,txt,x,y,o={}){ ctx.save(); ctx.font=(o.size||12)+'px '+(o.font||MONO); ctx.textAlign=o.align||'left'; ctx.textBaseline=o.base||'middle';
+  if(o.bg){ const m=ctx.measureText(txt), w=m.width+10, h=(o.size||12)+8; let bx=x-(ctx.textAlign==='center'?w/2:ctx.textAlign==='right'?w-5:5);
+    ctx.fillStyle=C.surface; ctx.globalAlpha=.9; ctx.fillRect(bx,y-h/2,w,h); ctx.globalAlpha=1; }
+  ctx.fillStyle=o.color||C.ink; ctx.fillText(txt,x,y); ctx.restore(); }
+function playBtn(btn,s){ const set=()=>btn.textContent=s.playing?'Pause':'Play'; btn.onclick=()=>{s.playing=!s.playing;s.forcePlay=true;set();}; set(); s.syncBtn=set; }
+
+/* ---------- Section 3: live J contour on the Williams–Irwin mode I field ---------- */
+{
+  const s={cv:makeCanvas(document.getElementById('jc')),t:reduce?99:0,playing:!reduce,visible:false};
+  const cb=makeCanvas(document.getElementById('jc2'));
+  scenes.push(s); playBtn(document.getElementById('jplay'),s);
+  const E=200e3, nu=0.3, mu=E/(2*(1+nu)), XR=8, YR=5, N=1200;           // MPa, mm
+  const st={shape:'circle',pe:true};
+  const el=id=>document.getElementById(id);
+  const sl={R:el('jR'),x1:el('jx1'),x2:el('jx2'),h:el('jh'),K:el('jK'),T:el('jT')};
+  const outs={R:[el('jRo'),' mm'],x1:[el('jx1o'),' mm'],x2:[el('jx2o'),' mm'],h:[el('jho'),' mm'],K:[el('jKo'),' MPa√m'],T:[el('jTo'),' MPa']};
+  const syncOut=()=>Object.keys(sl).forEach(k=>outs[k][0].textContent=(+sl[k].value).toFixed(k==='K'||k==='T'?0:1)+outs[k][1]);
+  Object.values(sl).forEach(i=>i.addEventListener('input',syncOut)); syncOut();
+  document.querySelectorAll('[data-shape]').forEach(b=>b.addEventListener('click',()=>{ st.shape=b.dataset.shape;
+    document.querySelectorAll('[data-shape]').forEach(o=>o.setAttribute('aria-pressed',o===b));
+    document.querySelectorAll('#jsize .ctl').forEach(c=>c.hidden=c.dataset.for!==st.shape); s.t=0; }));
+  document.querySelectorAll('[data-st]').forEach(b=>b.addEventListener('click',()=>{ st.pe=b.dataset.st==='pe';
+    document.querySelectorAll('[data-st]').forEach(o=>o.setAttribute('aria-pressed',o===b)); }));
+  // field at (x,y) in metres; K in MPa√m, T in MPa -> stresses MPa, displacement m
+  function field(x,y,K,T,kap){ const r=Math.hypot(x,y), t=Math.atan2(y,x), c=Math.cos(t/2), sn=Math.sin(t/2), s3=Math.sin(1.5*t), c3=Math.cos(1.5*t);
+    const k=K/Math.sqrt(2*Math.PI*r), f=K/(2*mu)*Math.sqrt(r/(2*Math.PI));
+    return [k*c*(1-sn*s3)+T, k*c*(1+sn*s3), k*c*sn*c3, f*c*(kap-1+2*sn*sn), f*sn*(kap+1-2*c*c)]; }
+  function pathPts(){ const P=[]; const R=+sl.R.value, x1=+sl.x1.value, x2=+sl.x2.value, h=+sl.h.value, e=1e-9;
+    if(st.shape==='circle'){ for(let i=0;i<=N;i++){ const a=-Math.PI+e+(2*Math.PI-2*e)*i/N; P.push([R*Math.cos(a),R*Math.sin(a)]); } }
+    else if(st.shape==='loop'){ for(let i=0;i<=N;i++){ const a=-Math.PI/2+2*Math.PI*i/N; P.push([3.5+1.5*Math.cos(a),2.5+1.5*Math.sin(a)]); } }
+    else { const V=[[x1,-e],[x1,-h],[x2,-h],[x2,h],[x1,h],[x1,e]], L=[]; let Lt=0;
+      for(let k=0;k<5;k++){ L.push(Math.hypot(V[k+1][0]-V[k][0],V[k+1][1]-V[k][1])); Lt+=L[k]; }
+      for(let k=0;k<5;k++){ const n=Math.max(4,Math.round(N*L[k]/Lt)); for(let i=0;i<n;i++) P.push([V[k][0]+(V[k+1][0]-V[k][0])*i/n,V[k][1]+(V[k+1][1]-V[k][1])*i/n]); }
+      P.push(V[5]); }
+    return P; }
+  let cache=null, key='';
+  function integrate(){ const K=+sl.K.value, T=+sl.T.value, pe=st.pe, kap=pe?3-4*nu:(3-nu)/(1+nu);
+    const k2=[st.shape,sl.R.value,sl.x1.value,sl.x2.value,sl.h.value,K,T,pe].join('|'); if(k2===key) return cache; key=k2;
+    const P=pathPts(), n=P.length-1, c1=new Float64Array(n+1), c2=new Float64Array(n+1), mids=[], tr=[]; let J1=0, J2=0, h=1e-7;
+    // T-stress displacement gradient: plane strain ux,x = (1-ν²)T/E, plane stress T/E
+    const dT=pe?(1-nu*nu)*T/E:T/E;
+    for(let i=0;i<n;i++){ const xa=P[i][0]*1e-3, ya=P[i][1]*1e-3, xb=P[i+1][0]*1e-3, yb=P[i+1][1]*1e-3;
+      const dx=xb-xa, dy=yb-ya, ds=Math.hypot(dx,dy), nx=dy/ds, ny=-dx/ds, x=(xa+xb)/2, y=(ya+yb)/2;
+      const [sxx,syy,txy]=field(x,y,K,T,kap), A=field(x+h,y,K,0,kap), B=field(x-h,y,K,0,kap);
+      const uxx=(A[3]-B[3])/(2*h)+dT, uyx=(A[4]-B[4])/(2*h);
+      let exx,eyy; if(pe){ exx=((1-nu*nu)*sxx-nu*(1+nu)*syy)/E; eyy=((1-nu*nu)*syy-nu*(1+nu)*sxx)/E; } else { exx=(sxx-nu*syy)/E; eyy=(syy-nu*sxx)/E; }
+      const W=.5*(sxx*exx+syy*eyy+txy*txy/mu), Tx=sxx*nx+txy*ny, Ty=txy*nx+syy*ny;
+      J1+=W*dy; J2+=-(Tx*uxx+Ty*uyx)*ds; c1[i+1]=J1*1e3; c2[i+1]=J2*1e3;   // kJ/m²
+      mids.push([x*1e3,y*1e3,nx,ny]); tr.push([Tx,Ty]); }
+    const Ep=pe?E/(1-nu*nu):E;
+    cache={P,n,c1,c2,mids,tr,J1:J1*1e3,J2:J2*1e3,JK:(st.shape==='loop'?0:1)*K*K/Ep*1e3,JK0:K*K/Ep*1e3,K};
+    el('oj1').textContent=fmtJ(cache.J1); el('oj2').textContent=fmtJ(cache.J2); el('oj').textContent=fmtJ(cache.J1+cache.J2);
+    el('ojk').textContent=st.shape==='loop'?'0 (no tip inside)':fmtJ(cache.JK0);
+    return cache; }
+  const fmtJ=v=>(Math.abs(v)<5e-4?'0.000':v.toFixed(3))+' kJ/m²';
+  // background: normalised σyy/K image, independent of K
+  const GW=192,GH=120,off=document.createElement('canvas'); off.width=GW; off.height=GH; const octx=off.getContext('2d'), img=octx.createImageData(GW,GH);
+  const r0=0.25e-3, smax=1/Math.sqrt(2*Math.PI*r0), comp=el('jcomp'), FV=new Float32Array(GW*GH); let fkey='';
+  const cbs=document.querySelectorAll('#jcb span'), NAMES={sxx:'σxx',syy:'σyy',txy:'τxy',vm:'von Mises'};
+  comp.addEventListener('change',()=>s.cv.dirty=true);
+  // colour map of the chosen component of the K + T field (MPa), clipped at r = 0.25 mm
+  function paintField(){ const K=+sl.K.value, T=+sl.T.value, c=comp.value, pe=st.pe, cap=K*smax;
+    let lo=Infinity, hi=-Infinity;
+    for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){ const x=(-XR+(i+.5)/GW*2*XR)*1e-3, y=(YR-(j+.5)/GH*2*YR)*1e-3;
+      const F=field(Math.hypot(x,y)<r0?x*r0/Math.hypot(x,y):x,Math.hypot(x,y)<r0?y*r0/Math.hypot(x,y):y,K,T,2); let v;
+      if(c==='sxx') v=F[0]; else if(c==='syy') v=F[1]; else if(c==='txy') v=F[2];
+      else { const sz=pe?nu*(F[0]+F[1]):0; v=Math.sqrt(.5*((F[0]-F[1])**2+(F[1]-sz)**2+(sz-F[0])**2)+3*F[2]*F[2]); }
+      v=clamp(v,-cap,cap); FV[j*GW+i]=v; lo=Math.min(lo,v); hi=Math.max(hi,v); }
+    if(c==='txy'){ const m=Math.max(-lo,hi); lo=-m; hi=m; }
+    if(c==='vm'){ lo=0; hi=500; }
+    for(let k=0;k<GW*GH;k++) paintT(img.data,k*4,(FV[k]-lo)/(hi-lo||1)); octx.putImageData(img,0,0);
+    cbs[0].textContent=NAMES[c]+', MPa'; cbs[1].textContent=lo.toFixed(0); cbs[2].textContent=c==='vm'?'≥ 500 = σY (red ≈ elastic estimate of the plastic zone)':hi.toFixed(0)+' (cut at r = 0.25 mm)'; }
+  s.draw=()=>{ const {ctx,w,h}=s.cv; if(!w) return;
+    const fk=[LUTP,comp.value,sl.K.value,sl.T.value,st.pe].join('|'); if(fk!==fkey){ paintField(); fkey=fk; }
+    const D=integrate();
+    const X=x=>(x+XR)/(2*XR)*w, Y=y=>(YR-y)/(2*YR)*h, sc=w/(2*XR);
+    ctx.clearRect(0,0,w,h); ctx.imageSmoothingEnabled=true; ctx.drawImage(off,0,0,w,h);
+    // crack
+    ctx.fillStyle=C.surface; ctx.strokeStyle=C.ink; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(0,Y(0)-3); ctx.lineTo(X(0),Y(0)); ctx.lineTo(0,Y(0)+3); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=C.ink; ctx.beginPath(); ctx.arc(X(0),Y(0),3,0,7); ctx.fill();
+    // progress along path
+    const T=7, p=s.playing||s.forcePlay?Math.min(1,(s.t%T)/6):1, kk=Math.max(1,Math.round(p*D.n));
+    ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.beginPath(); D.P.forEach((q,i)=>i?ctx.lineTo(X(q[0]),Y(q[1])):ctx.moveTo(X(q[0]),Y(q[1]))); ctx.stroke();
+    ctx.lineWidth=3; ctx.strokeStyle='#111'; ctx.beginPath(); for(let i=0;i<=kk;i++){ const q=D.P[i]; i?ctx.lineTo(X(q[0]),Y(q[1])):ctx.moveTo(X(q[0]),Y(q[1])); } ctx.stroke();
+    ctx.lineWidth=1.5; ctx.strokeStyle='#fff'; ctx.beginPath(); for(let i=0;i<=kk;i++){ const q=D.P[i]; i?ctx.lineTo(X(q[0]),Y(q[1])):ctx.moveTo(X(q[0]),Y(q[1])); } ctx.stroke();
+    // tracer with normal and traction
+    const m=D.mids[Math.min(D.n-1,kk-1)], tr=D.tr[Math.min(D.n-1,kk-1)], px=X(m[0]), py=Y(m[1]);
+    let tmax=0; D.tr.forEach(t=>tmax=Math.max(tmax,Math.hypot(t[0],t[1])));
+    const tl=Math.hypot(tr[0],tr[1])/tmax*Math.min(70,w*.09);
+    const harrow=(x2,y2,col)=>{ ctx.lineWidth=5; ctx.strokeStyle='#fff'; ctx.fillStyle='#fff'; arrow(ctx,px,py,x2,y2,10); ctx.lineWidth=2.2; ctx.strokeStyle=col; ctx.fillStyle=col; arrow(ctx,px,py,x2,y2,7); };
+    harrow(px+m[2]*34,py-m[3]*34,'#111');
+    if(tl>2){ const a=Math.atan2(tr[1],tr[0]); harrow(px+Math.cos(a)*tl,py-Math.sin(a)*tl,'#c2187a'); }
+    ctx.fillStyle='#fff'; ctx.strokeStyle='#111'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(px,py,4.5,0,7); ctx.fill(); ctx.stroke();
+    label(ctx,'n',px+m[2]*42,py-m[3]*42,{align:'center',size:14,font:SERIF,color:C.ink,bg:true});
+    label(ctx,'Γ',X(D.P[Math.round(D.n*.3)][0])+10,Y(D.P[Math.round(D.n*.3)][1])+12,{size:16,font:SERIF,bg:true});
+    label(ctx,'tip',X(0)-8,Y(0)-12,{align:'right',size:11,bg:true});
+    const Jt=D.c1[kk]+D.c2[kk];
+    label(ctx,'J so far = '+Jt.toFixed(2)+' kJ/m²',10,16,{size:12,bg:true});
+    label(ctx,'K²/E′ = '+(st.shape==='loop'?'0 (tip outside Γ)':D.JK0.toFixed(2)+' kJ/m²'),10,38,{size:12,bg:true,color:C.muted});
+    label(ctx,'traction T',w-10,h-14,{align:'right',size:11,color:'#c2187a',bg:true});
+    label(ctx,'normal n (black)',w-10,h-34,{align:'right',size:11,color:C.ink,bg:true});
+    ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(X(-1),h-6); ctx.lineTo(X(0),h-6); ctx.stroke();
+    label(ctx,'1 mm',X(-0.5),h-14,{align:'center',size:10,bg:true});
+    // cumulative chart
+    const c2=cb.ctx, W2=cb.w, H2=cb.h; if(!W2) return;
+    c2.clearRect(0,0,W2,H2); c2.fillStyle=C.surface; c2.fillRect(0,0,W2,H2);
+    let lo=0, hi=Math.max(D.JK0,1e-6); for(let i=0;i<=D.n;i++){ lo=Math.min(lo,D.c1[i],D.c2[i],D.c1[i]+D.c2[i]); hi=Math.max(hi,D.c1[i],D.c2[i],D.c1[i]+D.c2[i]); }
+    const pad=(hi-lo)*.08; lo-=pad; hi+=pad;
+    const b={x:54,y:20,w:W2-150,h:H2-50}, M=axes(c2,b,[0,1],[lo,hi],{xt:[0,.25,.5,.75,1],xf:v=>v===0?'start':v===1?'end':v.toFixed(2),xl:'fraction of Γ travelled',yl:'kJ/m²',ny:4,yf:v=>+v.toFixed(2)+''});
+    c2.setLineDash([5,4]); c2.strokeStyle=C.muted; c2.lineWidth=1.2; c2.beginPath(); c2.moveTo(b.x,M.Y(D.JK)); c2.lineTo(b.x+b.w,M.Y(D.JK)); c2.stroke(); c2.setLineDash([]);
+    const curve=(f,col,lw)=>{ c2.strokeStyle=col; c2.lineWidth=lw; c2.beginPath(); for(let i=0;i<=kk;i++){ const P=[M.X(i/D.n),M.Y(f(i))]; i?c2.lineTo(...P):c2.moveTo(...P);} c2.stroke(); };
+    curve(i=>D.c1[i],C.accent,1.8); curve(i=>D.c2[i],C.hot,1.8); curve(i=>D.c1[i]+D.c2[i],C.ink,2.4);
+    const lx=b.x+b.w+12; [['J (sum)',C.ink,2.4],['∫W dy',C.accent,1.8],['−∫T·u,x ds',C.hot,1.8]].forEach((L,i)=>{ const y=b.y+10+i*18;
+      c2.strokeStyle=L[1]; c2.lineWidth=L[2]; c2.beginPath(); c2.moveTo(lx,y); c2.lineTo(lx+14,y); c2.stroke(); label(c2,L[0],lx+18,y,{size:10,color:L[1]}); });
+    label(c2,st.shape==='loop'?'J = 0':'K²/E′',b.x+b.w-4,M.Y(D.JK)-9,{align:'right',size:10,color:C.muted,bg:true});
+  };
+}
+
+/* ---------- Section 5: J from K calculator ---------- */
+{
+  const el=id=>document.getElementById(id), K=el('cK'), Em=el('cE'), n=el('cn'), out=el('jcalc'); let pe=true;
+  function upd(){ const k=+K.value, e=+Em.value*1e3, v=+n.value, Ep=pe?e/(1-v*v):e, J=k*k/Ep;
+    el('cKo').textContent=k.toFixed(1)+' MPa√m'; el('cEo').textContent=(+Em.value).toFixed(0)+' GPa'; el('cno').textContent=v.toFixed(2);
+    out.innerHTML=(pe?`E′ = E/(1 − ν²) = ${e.toFixed(0)}/(1 − ${v.toFixed(2)}²) = ${Ep.toFixed(0)} MPa`:`E′ = E = ${e.toFixed(0)} MPa (plane stress)`)+
+      `<div>J = K²/E′ = ${k.toFixed(1)}² / ${Ep.toFixed(0)} = ${J.toExponential(3)} MPa·m</div>`+
+      `<div class="res">J = ${(J*1e3).toFixed(2)} kJ/m² = G</div>`+
+      `<div>Check: K = √(J E′) = √(${J.toExponential(3)} × ${Ep.toFixed(0)}) = ${Math.sqrt(J*Ep).toFixed(1)} MPa√m</div>`; }
+  [K,Em,n].forEach(i=>i.addEventListener('input',upd));
+  document.querySelectorAll('[data-cst]').forEach(b=>b.addEventListener('click',()=>{ pe=b.dataset.cst==='pe';
+    document.querySelectorAll('[data-cst]').forEach(o=>o.setAttribute('aria-pressed',o===b)); upd(); }));
+  upd();
+}
+
+/* ---------- Section 6: HRR singularities ---------- */
+{
+  const s={cv:makeCanvas(document.getElementById('hc')),t:0,playing:false,visible:false};
+  scenes.push(s); const sl=document.getElementById('hn'), o=document.getElementById('hno');
+  sl.addEventListener('input',()=>s.cv.dirty=true);
+  s.draw=()=>{ const {ctx,w,h}=s.cv; if(!w) return; const n=+sl.value;
+    o.textContent=n+(n===1?' (linear elastic)':'');
+    document.getElementById('ohs').textContent='−1/(n+1) = '+(-1/(n+1)).toFixed(3);
+    document.getElementById('ohe').textContent='−n/(n+1) = '+(-n/(n+1)).toFixed(3);
+    ctx.clearRect(0,0,w,h); ctx.fillStyle=C.surface; ctx.fillRect(0,0,w,h);
+    const b={x:56,y:30,w:w-170,h:h-80}, sup=v=>'10'+({'-3':'⁻³','-2':'⁻²','-1':'⁻¹','0':'⁰','1':'¹','2':'²','3':'³'}[v]);
+    const M=axes(ctx,b,[-3,0],[0,3],{xt:[-3,-2,-1,0],yt:[0,1,2,3],xf:sup,yf:sup,xl:'r / r_ref (log scale)',yl:'relative value (log)'});
+    const line=(sl_,col,lw,dash,txt)=>{ ctx.setLineDash(dash||[]); ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.beginPath(); ctx.moveTo(M.X(-3),M.Y(-3*sl_)); ctx.lineTo(M.X(0),M.Y(0)); ctx.stroke(); ctx.setLineDash([]);
+      if(txt) label(ctx,txt,M.X(-2.2),M.Y(-2.2*sl_)-12,{size:11,color:col,bg:true}); };
+    line(-0.5,C.muted,1.2,[5,4],'');
+    line(-1,C.ink,2.2,null,'σε ∝ 1/r');
+    line(-n/(n+1),C.hot,2.2,null,'ε ∝ r^(−'+n+'/'+(n+1)+')');
+    line(-1/(n+1),C.accent,2.2,null,'σ ∝ r^(−1/'+(n+1)+')');
+    label(ctx,'dashed: elastic',b.x+b.w+10,M.Y(1.3),{size:10,color:C.muted}); label(ctx,'1/√r (n = 1)',b.x+b.w+10,M.Y(1.3)+14,{size:10,color:C.muted});
+    label(ctx,'J sets the',b.x+b.w+10,M.Y(2.4),{size:11,color:C.ink});
+    label(ctx,'amplitude of all',b.x+b.w+10,M.Y(2.4)+15,{size:11,color:C.ink});
+    label(ctx,'three lines',b.x+b.w+10,M.Y(2.4)+30,{size:11,color:C.ink});
+    label(ctx,n===1?'n = 1: HRR = elastic K field, J = K²/E′':n>=15?'n large: almost perfectly plastic, σ nearly bounded':'n = '+n+': stress singularity weaker than 1/√r',b.x+8,b.y+b.h-14,{size:11,color:C.muted,bg:true});
+  };
+}
+
+/* ---------- Section 7: J from a bend test record ---------- */
+{
+  const s={cv:makeCanvas(document.getElementById('mc')),t:reduce?99:0,playing:!reduce,visible:false};
+  scenes.push(s); playBtn(document.getElementById('mplay'),s);
+  const sl=document.getElementById('mn'), mo=document.getElementById('mno');
+  sl.addEventListener('input',()=>{ s.cv.dirty=true; });
+  const Wd=50, B=25, a=25, b0=Wd-a, S=200, E=200e3, nu=0.3, sY=500, eta=1.9, Ep=E/(1-nu*nu);
+  const P0=1.456*sY*B*b0*b0/S, kst=P0/0.25, D0=0.15, PM=1.15;      // N, N/mm, mm
+  const aw=a/Wd, f=3*Math.sqrt(aw)*(1.99-aw*(1-aw)*(2.15-3.93*aw+2.7*aw*aw))/(2*(1+2*aw)*Math.pow(1-aw,1.5));
+  const Kof=P=>P*S/(B*Math.pow(Wd,1.5))*f/Math.sqrt(1000);       // MPa√m
+  const el=id=>document.getElementById(id);
+  s.draw=()=>{ const {ctx,w,h}=s.cv; if(!w) return; const n=+sl.value; mo.textContent=n;
+    const T=9, p=s.playing||s.forcePlay?Math.min(1,(s.t%T)/7):1, q=ease(p)*PM;   // q = P/P0
+    const Dpl=x=>D0*Math.pow(x,n), Dt=x=>x*P0/kst+Dpl(x), Upl=x=>D0*n/(n+1)*P0*Math.pow(x,n+1);
+    const Jel=x=>Kof(x*P0)**2/Ep*1e3, Jpl=x=>eta*Upl(x)/(B*b0), Jt=x=>Jel(x)+Jpl(x);   // kJ/m² (N/mm)
+    const P=q*P0, K=Kof(P);
+    el('omP').textContent=(P/1e3).toFixed(1)+' kN'; el('omK').textContent=K.toFixed(1)+' MPa√m';
+    el('omJe').textContent=Jel(q).toFixed(1)+' kJ/m²'; el('omJp').textContent=Jpl(q).toFixed(1)+' kJ/m²';
+    el('omJ').textContent=Jt(q).toFixed(1)+' kJ/m²'; el('omKJ').textContent=Math.sqrt(Jt(q)*1e-3*Ep).toFixed(1)+' MPa√m';
+    ctx.clearRect(0,0,w,h); ctx.fillStyle=C.surface; ctx.fillRect(0,0,w,h);
+    const narrow=w<560, gap=narrow?0:40;
+    const b1=narrow?{x:50,y:28,w:w-70,h:h*.5-56}:{x:54,y:28,w:(w-gap)/2-70,h:h-74};
+    const b2=narrow?{x:50,y:h*.5+26,w:w-70,h:h*.5-60}:{x:b1.x+b1.w+gap+50,y:28,w:(w-gap)/2-60,h:h-74};
+    const Dmax=Dt(PM)*1.05, M=axes(ctx,b1,[0,Dmax],[0,PM*P0/1e3*1.08],{xl:'load-line displacement Δ, mm',yl:'P, kN',nx:4,ny:4});
+    // shaded plastic work: region under curve left of the elastic unloading line
+    const NS=80; ctx.beginPath(); ctx.moveTo(M.X(0),M.Y(0));
+    for(let i=0;i<=NS;i++){ const x=q*i/NS; ctx.lineTo(M.X(Dt(x)),M.Y(x*P0/1e3)); }
+    ctx.lineTo(M.X(Dpl(q)),M.Y(0)); ctx.closePath(); ctx.fillStyle=C.hot; ctx.globalAlpha=.25; ctx.fill(); ctx.globalAlpha=1;
+    // elastic triangle
+    ctx.beginPath(); ctx.moveTo(M.X(Dpl(q)),M.Y(0)); ctx.lineTo(M.X(Dt(q)),M.Y(P/1e3)); ctx.lineTo(M.X(Dt(q)),M.Y(0)); ctx.closePath(); ctx.fillStyle=C.accent; ctx.globalAlpha=.15; ctx.fill(); ctx.globalAlpha=1;
+    ctx.setLineDash([5,4]); ctx.strokeStyle=C.accent; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(M.X(Dpl(q)),M.Y(0)); ctx.lineTo(M.X(Dt(q)),M.Y(P/1e3)); ctx.stroke();
+    ctx.strokeStyle=C.muted; ctx.beginPath(); ctx.moveTo(M.X(0),M.Y(0)); ctx.lineTo(M.X(Math.min(Dmax,PM*P0/kst)),M.Y(Math.min(Dmax*kst,PM*P0)/1e3)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle=C.muted; ctx.lineWidth=1; ctx.globalAlpha=.5; ctx.beginPath(); for(let i=0;i<=NS;i++){ const x=PM*i/NS; i?ctx.lineTo(M.X(Dt(x)),M.Y(x*P0/1e3)):ctx.moveTo(M.X(0),M.Y(0)); } ctx.stroke(); ctx.globalAlpha=1;
+    ctx.strokeStyle=C.ink; ctx.lineWidth=2.2; ctx.beginPath(); for(let i=0;i<=NS;i++){ const x=q*i/NS; i?ctx.lineTo(M.X(Dt(x)),M.Y(x*P0/1e3)):ctx.moveTo(M.X(0),M.Y(0)); } ctx.stroke();
+    ctx.fillStyle=C.ink; ctx.beginPath(); ctx.arc(M.X(Dt(q)),M.Y(P/1e3),4,0,7); ctx.fill();
+    if(q>.5){ label(ctx,'U_pl',M.X(Dpl(q)*.55+Dt(q*.6)*.2),M.Y(P/1e3*.35),{size:12,color:C.hot,bg:true});
+      label(ctx,'elastic',M.X((Dpl(q)*2+Dt(q))/3)+4,M.Y(P/1e3*.15),{size:10,color:C.accent}); }
+    label(ctx,'linear elastic',M.X(Dmax*.45),M.Y(Math.min(Dmax*.45*kst,PM*P0)/1e3)-12,{size:10,color:C.muted,align:'right'});
+    // J versus P
+    const Jmax=Jt(PM)*1.08, M2=axes(ctx,b2,[0,PM*P0/1e3],[0,Jmax],{xl:'P, kN',yl:'J, kJ/m²',nx:4,ny:4});
+    const crv=(fn,col,lw,to,dash)=>{ ctx.setLineDash(dash||[]); ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.beginPath(); for(let i=0;i<=NS;i++){ const x=to*i/NS; const P_=[M2.X(x*P0/1e3),M2.Y(fn(x))]; i?ctx.lineTo(...P_):ctx.moveTo(...P_);} ctx.stroke(); ctx.setLineDash([]); };
+    crv(Jel,C.accent,1.2,PM,[5,4]); crv(Jt,C.muted,1,PM); ctx.globalAlpha=1;
+    crv(Jt,C.ink,2.4,q); crv(Jel,C.accent,2.2,q);
+    ctx.fillStyle=C.ink; ctx.beginPath(); ctx.arc(M2.X(P/1e3),M2.Y(Jt(q)),4,0,7); ctx.fill();
+    ctx.fillStyle=C.accent; ctx.beginPath(); ctx.arc(M2.X(P/1e3),M2.Y(Jel(q)),3.5,0,7); ctx.fill();
+    label(ctx,'J = J_el + J_pl',M2.X(PM*P0/1e3*.62),M2.Y(Jt(PM*.62*1.18)),{size:11,align:'right',bg:true});
+    label(ctx,'J_el = K²/E′ (LEFM)',b2.x+b2.w,M2.Y(Jel(PM))+14,{size:11,align:'right',color:C.accent,bg:true});
+    label(ctx,'P/P_limit = '+q.toFixed(2),b2.x+6,b2.y+8,{size:11,color:C.muted,bg:true});
+  };
+}
+
+/* ---------- loop ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{const s=scenes.find(s=>s.cv.el===e.target); if(s) s.visible=e.isIntersecting;}),{threshold:0.05});
+scenes.forEach(s=>io.observe(s.cv.el));
+readTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',readTheme);
+new MutationObserver(readTheme).observe(R,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts) document.fonts.ready.then(()=>scenes.forEach(s=>s.draw&&s.draw()));
+let last=performance.now();
+function frame(now){ const dt=Math.min(0.05,(now-last)/1000); last=now;
+  scenes.forEach(s=>{ if(!s.visible||!s.cv.w) return; if(s.playing && (!reduce || s.forcePlay)) s.t+=dt; s.draw(); });
+  requestAnimationFrame(frame); }
+scenes.forEach(s=>s.draw&&s.cv.w&&s.draw());
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

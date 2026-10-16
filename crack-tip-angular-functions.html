@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crack Tip Angular Functions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;1,500&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a lab-notebook sequence of five numbered experiments, each a live figure beside its reasoning. */
+:root{
+  --bg:#edf0f3; --surface:#f9fafb; --ink:#152030; --muted:#566475; --rule:#cdd5de;
+  --accent:#1d58b8; --hot:#d9561a; --plate:#dfe5ec; --cool:#3f78cf;
+  --heat1:#f3cf74; --heat2:#e0661b; --heat3:#9b1230;
+  --f-display:"Spectral", Georgia, "Times New Roman", serif;
+  --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --s1:.8125rem; --s2:.9375rem; --s3:1.0625rem; --s4:1.375rem; --s5:clamp(1.9rem,4.2vw,2.75rem);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
+  --accent:#82abff; --hot:#ff8a3d; --plate:#1c2530; --cool:#5b92ea;
+  --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
+  --accent:#82abff; --hot:#ff8a3d; --plate:#1c2530; --cool:#5b92ea;
+  --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:var(--s2);line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:1180px;margin:0 auto}
+header{padding-block:44px 20px;display:grid;gap:14px}
+.eyebrow{font-family:var(--f-mono);font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:600;font-size:var(--s5);line-height:1.1;margin:0;text-wrap:balance;max-width:22ch}
+h1 em{font-style:italic;color:var(--accent);font-weight:500}
+.lede{max-width:66ch;margin:0;color:var(--muted);font-size:var(--s3)}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+nav.toc a{font-family:var(--f-mono);font-size:var(--s1);color:var(--ink);text-decoration:none;border:1px solid var(--rule);
+  padding:5px 10px;border-radius:999px;background:var(--surface)}
+nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--accent);color:var(--accent)}
+nav.toc b{color:var(--accent);font-weight:500;margin-right:6px}
+
+section.scene{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;padding-block:36px;border-top:1px solid var(--rule)}
+@media (max-width:860px){ section.scene{grid-template-columns:minmax(0,1fr);gap:18px} }
+.fig{display:grid;gap:10px;min-width:0;align-content:start}
+canvas{display:block;width:100%;aspect-ratio:16/10;max-width:100%;border-radius:6px;background:var(--surface);border:1px solid var(--rule);touch-action:none}
+.text{min-width:0;display:grid;gap:12px;align-content:start}
+.step{font-family:var(--f-mono);font-size:var(--s1);color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+h2{font-family:var(--f-display);font-weight:600;font-size:var(--s4);line-height:1.2;margin:0;text-wrap:balance}
+.text p{margin:0;max-width:62ch}
+.eq{font-family:var(--f-display);font-size:1.2rem;background:var(--surface);border:1px solid var(--rule);border-radius:6px;
+  padding:12px 14px;overflow-x:auto;white-space:nowrap}
+.eq small{display:block;font-family:var(--f-body);font-size:var(--s1);color:var(--muted);white-space:normal;margin-top:4px}
+.sym{font-family:var(--f-display);font-style:italic}
+sub,sup{font-size:.72em;line-height:0}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.ctl{display:grid;gap:2px;min-width:0;flex:1 1 170px}
+.ctl label{font-size:var(--s1);color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.ctl label output{font-family:var(--f-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select{font:inherit;font-size:var(--s1);padding:6px 8px;border-radius:6px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);max-width:100%}
+button{font:inherit;font-size:var(--s1);font-weight:500;cursor:pointer;border-radius:6px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--ink);padding:6px 12px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;border-right:1px solid var(--rule)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.readout div{background:var(--surface);padding:8px 10px;display:grid;gap:1px}
+.readout span{font-size:.75rem;color:var(--muted)}
+.readout strong{font-family:var(--f-mono);font-weight:500;font-size:1rem;font-variant-numeric:tabular-nums}
+.calc{font-family:var(--f-mono);font-size:var(--s1);background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:12px 14px;
+  display:grid;gap:4px;overflow-x:auto;font-variant-numeric:tabular-nums}
+.calc .res{color:var(--accent);font-weight:500;font-size:var(--s2)}
+.note{font-size:var(--s1);color:var(--muted);border-left:2px solid var(--rule);padding-left:10px}
+.flag{font-family:var(--f-mono);font-size:.75rem;padding:2px 8px;border-radius:999px;border:1px solid currentColor;justify-self:start}
+.flag.ok{color:var(--accent)} .flag.warn{color:var(--hot)}
+ol.how{margin:0;padding-left:1.3em;display:grid;gap:4px;max-width:62ch}
+canvas.short{aspect-ratio:16/7}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--surface)}
+.tbl table{border-collapse:collapse;width:100%;font-size:var(--s1)}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+.tbl tr:last-child th,.tbl tr:last-child td{border-bottom:0}
+.tbl thead th{font-weight:600;color:var(--accent)}
+.tbl tbody th{font-weight:500;color:var(--muted);white-space:nowrap}
+footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font-size:var(--s1);max-width:80ch}
+
+.block{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding-block:32px;border-top:1px solid var(--rule)}
+.block .tbl{max-width:900px}
+.block .tbl td{font-family:var(--f-display);font-size:1rem}
+a.back{color:var(--accent);text-decoration:none;text-transform:none;letter-spacing:0}
+a.back:hover{text-decoration:underline}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;max-width:900px}
+.modes figure{margin:0;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px;display:grid;gap:6px}
+.modes svg{width:100%;height:auto}
+.modes figcaption{font-size:var(--s1);color:var(--muted)} .modes b{color:var(--ink)}
+.modes .body{fill:var(--plate);stroke:var(--ink);stroke-width:1.2}
+.modes .cr{stroke:var(--ink);stroke-width:2;fill:none}
+.modes .ar{stroke:var(--accent);stroke-width:2;fill:none} .modes .ah{fill:none;stroke:var(--accent);stroke-width:2}
+.modes .dot{fill:none;stroke:var(--accent);stroke-width:2} .modes .dotf{fill:var(--accent)}
+.block .fig{max-width:900px}
+.tdg{margin:0;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;display:grid;gap:6px;max-width:520px}
+.tdg svg{width:100%;height:auto;display:block}
+.tdg figcaption{font-size:var(--s1);color:var(--muted)}
+.tdg .mat{fill:var(--plate)} .tdg .cr{fill:var(--bg);stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round}
+.tdg .ax{stroke:var(--ink);stroke-width:1.3;fill:none} .tdg .ahd{fill:var(--ink)}
+.tdg .rr{stroke:var(--accent);stroke-width:2;stroke-dasharray:5 4} .tdg .arc{stroke:var(--accent);stroke-width:1.6;fill:none}
+.tdg .pt{fill:var(--hot)} .tdg .tip{fill:var(--hot)}
+.tdg text{font-family:var(--f-body);font-size:12px} .tdg .lbl{fill:var(--ink);font-family:var(--f-display);font-style:italic;font-size:16px}
+.tdg .acc{fill:var(--accent)} .tdg .mut{fill:var(--muted);font-size:11px}
+.eq{position:relative;padding-right:56px}
+.eqno{position:absolute;right:12px;top:12px;font-family:var(--f-mono);font-size:var(--s1);color:var(--muted);font-style:normal}
+.eq small.src{color:var(--accent)}
+a.cite{color:var(--accent);text-decoration:none;font-family:var(--f-mono);font-size:.82em;margin-left:2px;white-space:nowrap}
+a.cite:hover{text-decoration:underline}
+.refs{border-top:1px solid var(--rule);padding-block:28px;display:grid;gap:10px}
+.refs h2{margin:0}
+.refs ol{margin:0;padding-left:1.8em;display:grid;gap:6px;max-width:90ch;font-size:var(--s1)}
+.refs li:target{background:var(--surface);outline:1px solid var(--accent);border-radius:4px}
+.cbar{display:grid;grid-template-columns:auto auto minmax(80px,1fr) auto;align-items:center;gap:8px;font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.cbar i{height:10px;border-radius:2px;border:1px solid var(--rule);background:linear-gradient(to right,#00008f,#0000ff,#00ffff,#ffff00,#ff0000,#800000)}
+.cbar .cbl{color:var(--ink)}
+.cfig{margin:0;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:8px;display:grid;gap:6px}
+.cfig img{width:100%;height:auto;display:block;background:#fff;border-radius:3px}
+.cfig figcaption{font-size:var(--s1);color:var(--muted)}
+
+/* full-width introduction and author credit */
+header h1,header .lede{max-width:none}
+.credit{margin:0;font-size:.8125rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px}
+.credit b{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow"><a class="back" href="index.html">⌂ Home</a> · <a class="back" href="crack-tip-stress-intensity.html">← Stress intensity at the crack tip</a></div>
+  <h1>Angular functions <em>f<sub>ij</sub>(θ)</em></h1>
+  <p class="lede">Reference tables for the leading singular term of the crack-tip field, σ<sub>ij</sub> = K / √(2πr) · f<sub>ij</sub>(θ), for each loading mode, in Cartesian and polar components, with the matching displacements.</p>
+  <p class="credit"><b>Author:</b> Dr Régis Kubler, Arts et Métiers Institute of Technology. Developed with the assistance of Claude Opus 5.5 (Anthropic), October 2026. Code: MIT · Documentation: CC BY 4.0.</p>
+</header>
+
+<section class="block">
+  <div class="text">
+    <div class="step">What changes with geometry, and what does not</div>
+    <h2>f<sub>ij</sub>(θ) depends on the loading mode only</h2>
+    <p>The angular functions are the same for every geometry: a centre crack, an edge crack, a compact tension specimen or a crack in a pressure vessel all share them. They change only with the <em>mode</em> of loading, that is, how the crack faces move relative to each other. Geometry and load magnitude enter in two places:</p>
+    <ol class="how">
+      <li>the stress intensity factors K<sub>I</sub>, K<sub>II</sub>, K<sub>III</sub>, through Y(a/W), and</li>
+      <li>the higher-order terms of the Williams series <a class="cite" href="#ref4">[4]</a>, starting with the T-stress, which control how far from the tip the singular term stays accurate.</li>
+    </ol>
+  </div>
+<figure class="tdg">
+  <svg viewBox="0 0 340 200" role="img" aria-label="Crack-tip polar coordinates: r is the distance from the tip to the point, theta is the angle measured anticlockwise from the crack line ahead of the tip">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="ahd"/></marker></defs>
+    <path class="mat" d="M10 20 H330 V190 H10 V122 L170 120 L10 118 Z"/>
+    <path class="cr" d="M10 112 L170 120 L10 128"/>
+    <path class="ax" d="M170 120 H320" marker-end="url(#ah)"/><path class="ax" d="M170 120 V28" marker-end="url(#ah)"/>
+    <text class="lbl" x="322" y="138">x</text><text class="lbl" x="178" y="34">y</text>
+    <path class="rr" d="M170 120 L234 44"/>
+    <circle class="pt" cx="234" cy="44" r="4.5"/>
+    <text class="lbl" x="242" y="40">P(r, θ)</text>
+    <text class="lbl acc" x="190" y="76">r</text>
+    <path class="arc" d="M215 120 A45 45 0 0 0 198.9 85.5" marker-end="url(#ah)"/>
+    <text class="lbl acc" x="222" y="104">θ</text>
+    <text class="mut" x="18" y="104">crack, upper face θ = +180°</text>
+    <text class="mut" x="18" y="146">lower face θ = −180°</text>
+    <text class="mut" x="246" y="114">θ = 0 ahead of tip</text>
+    <circle class="tip" cx="170" cy="120" r="3.5"/><text class="mut" x="146" y="140">tip</text>
+  </svg>
+  <figcaption>Polar coordinates centred on the crack tip. The origin is the tip, x runs along the crack line ahead of it, and y is normal to the crack. θ is measured anticlockwise from the x-axis, so θ = 0 is straight ahead and θ = ±180° are the two crack faces.</figcaption>
+</figure>
+      <div class="modes" aria-label="The three loading modes">
+    <figure><svg viewBox="0 0 160 120" role="img" aria-label="Mode I: crack faces pulled apart">
+      <path class="body" d="M20 20 H140 V54 H86 L80 60 L86 66 H140 V100 H20 Z"/>
+      <path class="cr" d="M20 58 H80 M20 62 H80"/>
+      <path class="ar" d="M60 30 V8 M60 90 V112"/><path class="ah" d="M55 13 L60 6 L65 13 M55 107 L60 114 L65 107"/>
+    </svg><figcaption><b>Mode I</b> · opening<br>tension normal to the crack</figcaption></figure>
+    <figure><svg viewBox="0 0 160 120" role="img" aria-label="Mode II: in-plane sliding">
+      <path class="body" d="M20 20 H140 V100 H20 Z"/>
+      <path class="cr" d="M20 60 H80"/>
+      <path class="ar" d="M70 46 H32 M30 74 H68"/><path class="ah" d="M37 41 L30 46 L37 51 M63 69 L70 74 L63 79"/>
+    </svg><figcaption><b>Mode II</b> · in-plane sliding<br>shear parallel to the crack, normal to the front</figcaption></figure>
+    <figure><svg viewBox="0 0 160 120" role="img" aria-label="Mode III: out-of-plane tearing">
+      <path class="body" d="M20 20 H140 V100 H20 Z"/>
+      <path class="cr" d="M20 60 H80"/>
+      <circle class="dot" cx="50" cy="44" r="7"/><circle class="dotf" cx="50" cy="44" r="2"/>
+      <circle class="dot" cx="50" cy="76" r="7"/><path class="ar" d="M45 71 L55 81 M55 71 L45 81"/>
+    </svg><figcaption><b>Mode III</b> · tearing<br>shear parallel to the crack front, out of plane</figcaption></figure>
+  </div>
+</section>
+
+<section class="block">
+  <div class="text">
+    <div class="step">Explore</div>
+    <h2>Plot the angular functions</h2>
+    <p>Pick a mode and a coordinate system. Each curve is one f<sub>ij</sub>(θ), plotted from θ = −180° (lower crack face) to θ = +180° (upper crack face). Hover or drag across the plot to read values.</p>
+  </div>
+  <div class="fig">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Mode">
+        <button data-mode="I" aria-pressed="true">Mode I</button><button data-mode="II" aria-pressed="false">Mode II</button><button data-mode="III" aria-pressed="false">Mode III</button>
+      </div>
+      <div class="seg" role="group" aria-label="Components">
+        <button data-sys="cart" aria-pressed="true">Cartesian</button><button data-sys="polar" aria-pressed="false">Polar</button>
+      </div>
+    </div>
+    <canvas id="plot" aria-label="Angular functions versus theta"></canvas>
+    <div class="readout" id="vals"></div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="text">
+    <div class="step">Mode I · opening</div>
+    <h2>Stresses and displacements for K<sub>I</sub></h2>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Component</th><th>Expression</th></tr></thead>
+    <tbody>
+      <tr><th>σ<sub>xx</sub></th><td>K<sub>I</sub>/√(2πr) · cos(θ/2) [1 − sin(θ/2) sin(3θ/2)]</td></tr>
+      <tr><th>σ<sub>yy</sub></th><td>K<sub>I</sub>/√(2πr) · cos(θ/2) [1 + sin(θ/2) sin(3θ/2)]</td></tr>
+      <tr><th>τ<sub>xy</sub></th><td>K<sub>I</sub>/√(2πr) · cos(θ/2) sin(θ/2) cos(3θ/2)</td></tr>
+      <tr><th>σ<sub>rr</sub></th><td>K<sub>I</sub>/√(2πr) · [ (5/4) cos(θ/2) − (1/4) cos(3θ/2) ]</td></tr>
+      <tr><th>σ<sub>θθ</sub></th><td>K<sub>I</sub>/√(2πr) · [ (3/4) cos(θ/2) + (1/4) cos(3θ/2) ]</td></tr>
+      <tr><th>τ<sub>rθ</sub></th><td>K<sub>I</sub>/√(2πr) · [ (1/4) sin(θ/2) + (1/4) sin(3θ/2) ]</td></tr>
+      <tr><th>σ<sub>zz</sub></th><td>0 (plane stress) · ν(σ<sub>xx</sub> + σ<sub>yy</sub>) (plane strain)</td></tr>
+      <tr><th>u<sub>x</sub></th><td>(K<sub>I</sub>/2μ) √(r/2π) · cos(θ/2) [κ − 1 + 2 sin²(θ/2)]</td></tr>
+      <tr><th>u<sub>y</sub></th><td>(K<sub>I</sub>/2μ) √(r/2π) · sin(θ/2) [κ + 1 − 2 cos²(θ/2)]</td></tr>
+    </tbody></table></div>
+</section>
+
+<section class="block">
+  <div class="text">
+    <div class="step">Mode II · in-plane sliding</div>
+    <h2>Stresses and displacements for K<sub>II</sub></h2>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Component</th><th>Expression</th></tr></thead>
+    <tbody>
+      <tr><th>σ<sub>xx</sub></th><td>−K<sub>II</sub>/√(2πr) · sin(θ/2) [2 + cos(θ/2) cos(3θ/2)]</td></tr>
+      <tr><th>σ<sub>yy</sub></th><td>K<sub>II</sub>/√(2πr) · sin(θ/2) cos(θ/2) cos(3θ/2)</td></tr>
+      <tr><th>τ<sub>xy</sub></th><td>K<sub>II</sub>/√(2πr) · cos(θ/2) [1 − sin(θ/2) sin(3θ/2)]</td></tr>
+      <tr><th>σ<sub>rr</sub></th><td>K<sub>II</sub>/√(2πr) · [ −(5/4) sin(θ/2) + (3/4) sin(3θ/2) ]</td></tr>
+      <tr><th>σ<sub>θθ</sub></th><td>K<sub>II</sub>/√(2πr) · [ −(3/4) sin(θ/2) − (3/4) sin(3θ/2) ]</td></tr>
+      <tr><th>τ<sub>rθ</sub></th><td>K<sub>II</sub>/√(2πr) · [ (1/4) cos(θ/2) + (3/4) cos(3θ/2) ]</td></tr>
+      <tr><th>σ<sub>zz</sub></th><td>0 (plane stress) · ν(σ<sub>xx</sub> + σ<sub>yy</sub>) (plane strain)</td></tr>
+      <tr><th>u<sub>x</sub></th><td>(K<sub>II</sub>/2μ) √(r/2π) · sin(θ/2) [κ + 1 + 2 cos²(θ/2)]</td></tr>
+      <tr><th>u<sub>y</sub></th><td>−(K<sub>II</sub>/2μ) √(r/2π) · cos(θ/2) [κ − 1 − 2 sin²(θ/2)]</td></tr>
+    </tbody></table></div>
+</section>
+
+<section class="block">
+  <div class="text">
+    <div class="step">Mode III · tearing</div>
+    <h2>Stresses and displacement for K<sub>III</sub></h2>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Component</th><th>Expression</th></tr></thead>
+    <tbody>
+      <tr><th>τ<sub>xz</sub></th><td>−K<sub>III</sub>/√(2πr) · sin(θ/2)</td></tr>
+      <tr><th>τ<sub>yz</sub></th><td>K<sub>III</sub>/√(2πr) · cos(θ/2)</td></tr>
+      <tr><th>τ<sub>rz</sub></th><td>K<sub>III</sub>/√(2πr) · sin(θ/2)</td></tr>
+      <tr><th>τ<sub>θz</sub></th><td>K<sub>III</sub>/√(2πr) · cos(θ/2)</td></tr>
+      <tr><th>σ<sub>xx</sub>, σ<sub>yy</sub>, τ<sub>xy</sub>, σ<sub>zz</sub></th><td>0</td></tr>
+      <tr><th>u<sub>z</sub></th><td>(2K<sub>III</sub>/μ) √(r/2π) · sin(θ/2)</td></tr>
+    </tbody></table></div>
+  <p class="note">Here μ is the shear modulus and κ = 3 − 4ν in plane strain, κ = (3 − ν)/(1 + ν) in plane stress. The polar components were checked against the Cartesian ones by tensor rotation. Sources for all three tables: Williams <a class="cite" href="#ref4">[4]</a>, Irwin <a class="cite" href="#ref5">[5]</a>, Anderson <a class="cite" href="#ref9">[9]</a> Tables 2.1–2.2, Tada et al. <a class="cite" href="#ref7">[7]</a>.</p>
+</section>
+
+<section class="block">
+  <div class="text">
+    <div class="step">Combined loading</div>
+    <h2>Mixed mode: add the fields, never the K's</h2>
+    <p>In linear elasticity the three fields superpose, each with its own K:</p>
+    <div class="eq"><span class="eqno">(1)</span>σ<sub>ij</sub> = [ K<sub>I</sub> f<sub>ij</sub><sup>I</sup>(θ) + K<sub>II</sub> f<sub>ij</sub><sup>II</sup>(θ) + K<sub>III</sub> f<sub>ij</sub><sup>III</sup>(θ) ] / √(2πr)
+      <small>K<sub>I</sub> + K<sub>II</sub> is meaningless because the angular functions differ. Energy does add: G = (K<sub>I</sub>² + K<sub>II</sub>²)/E′ + K<sub>III</sub>²/2μ.</small>
+      <small class="src">Source: Irwin <a class="cite" href="#ref5">[5]</a>; Anderson <a class="cite" href="#ref9">[9]</a> · Notes §8.2</small></div>
+    <p>The table shows which mode a given geometry and load produce. For a through crack of length 2a at angle β to a uniaxial stress σ in an infinite plate, the load splits into a normal and a shear component on the crack plane.</p>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Geometry and loading</th><th>Mode</th><th>Stress intensity factors</th></tr></thead>
+    <tbody>
+      <tr><th>Tension normal to the crack plane</th><td>I</td><td>K<sub>I</sub> = Yσ√(πa)</td></tr>
+      <tr><th>In-plane shear τ parallel to the crack, through crack 2a</th><td>II</td><td>K<sub>II</sub> = τ√(πa)</td></tr>
+      <tr><th>Anti-plane shear τ (e.g. torsion of a cracked shaft), through crack 2a</th><td>III</td><td>K<sub>III</sub> = τ√(πa)</td></tr>
+      <tr><th>Through crack 2a inclined at β to uniaxial σ</th><td>I + II</td><td>K<sub>I</sub> = σ√(πa) sin²β · K<sub>II</sub> = σ√(πa) sinβ cosβ</td></tr>
+      <tr><th>Tension plus torsion on a cracked tube</th><td>I + III</td><td>Superpose the two solutions</td></tr>
+    </tbody></table></div>
+</section>
+
+<section class="block">
+  <div class="text">
+    <div class="step">Beyond the singular term</div>
+    <h2>The T-stress is where geometry shows up in the field</h2>
+    <p>The full Williams expansion <a class="cite" href="#ref4">[4]</a> for mode I is</p>
+    <div class="eq"><span class="eqno">(2)</span>σ<sub>ij</sub> = K<sub>I</sub>/√(2πr) · f<sub>ij</sub><sup>I</sup>(θ) + T δ<sub>1i</sub>δ<sub>1j</sub> + O(√r)
+      <small>T is a constant stress parallel to the crack (it adds only to σ<sub>xx</sub>). It depends on geometry and loading, and changes constraint and the size of the zone where K alone describes the field.</small>
+      <small class="src">Source: Williams <a class="cite" href="#ref4">[4]</a>; Leevers &amp; Radon <a class="cite" href="#ref11">[11]</a> · Notes §8.3</small></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Through crack 2a, infinite plate</th><th>T</th></tr></thead>
+    <tbody>
+      <tr><th>Uniaxial σ normal to the crack</th><td>−σ</td></tr>
+      <tr><th>Equibiaxial σ</th><td>0</td></tr>
+      <tr><th>Uniaxial σ at angle β to the crack line</th><td>σ cos 2β</td></tr>
+    </tbody></table></div>
+  <p class="note">For finite specimens T is usually given through the biaxiality ratio B = T√(πa)/K<sub>I</sub>, tabulated by Leevers and Radon (1982) <a class="cite" href="#ref11">[11]</a> and Sherry et al. (1995) <a class="cite" href="#ref12">[12]</a>.</p>
+</section>
+
+<section class="refs" id="refs">
+  <h2>References</h2>
+  <ol>
+    <li id="ref1">C. E. Inglis (1913). Stresses in a plate due to the presence of cracks and sharp corners. <i>Transactions of the Institution of Naval Architects</i> 55, 219–241.</li>
+    <li id="ref2">N. I. Muskhelishvili (1953). <i>Some Basic Problems of the Mathematical Theory of Elasticity</i>. Noordhoff, Groningen.</li>
+    <li id="ref3">H. M. Westergaard (1939). Bearing pressures and cracks. <i>Journal of Applied Mechanics</i> 6, A49–A53.</li>
+    <li id="ref4">M. L. Williams (1957). On the stress distribution at the base of a stationary crack. <i>Journal of Applied Mechanics</i> 24, 109–114.</li>
+    <li id="ref5">G. R. Irwin (1957). Analysis of stresses and strains near the end of a crack traversing a plate. <i>Journal of Applied Mechanics</i> 24, 361–364.</li>
+    <li id="ref6">C. E. Feddersen (1967). Discussion of plane strain crack toughness testing. In <i>ASTM STP 410</i>, 77–79.</li>
+    <li id="ref7">H. Tada, P. C. Paris, G. R. Irwin (2000). <i>The Stress Analysis of Cracks Handbook</i>, 3rd ed. ASME Press, New York.</li>
+    <li id="ref8">D. S. Dugdale (1960). Yielding of steel sheets containing slits. <i>Journal of the Mechanics and Physics of Solids</i> 8, 100–104.</li>
+    <li id="ref9">T. L. Anderson (2017). <i>Fracture Mechanics: Fundamentals and Applications</i>, 4th ed. CRC Press, Boca Raton.</li>
+    <li id="ref10">ASTM E399. Standard test method for linear-elastic plane-strain fracture toughness of metallic materials. ASTM International.</li>
+    <li id="ref11">P. S. Leevers, J. C. Radon (1982). Inherent stress biaxiality in various fracture specimen geometries. <i>International Journal of Fracture</i> 19, 311–325.</li>
+    <li id="ref12">A. H. Sherry, C. C. France, M. R. Goldthorpe (1995). Compendium of T-stress solutions for two and three dimensional cracked geometries. <i>Fatigue &amp; Fracture of Engineering Materials &amp; Structures</i> 18, 141–155.</li>
+    <li id="ref13">J. R. Rice (1968). A path independent integral and the approximate analysis of strain concentration by notches and cracks. <i>Journal of Applied Mechanics</i> 35, 379–386.</li>
+    <li id="ref14">A. A. Griffith (1921). The phenomena of rupture and flow in solids. <i>Philosophical Transactions of the Royal Society A</i> 221, 163–198.</li>
+  </ol>
+  <p class="note">Equation numbers on these pages are local to the pages. "Notes §" points to the matching section of the LaTeX/PDF lecture notes.</p>
+</section>
+<footer>Sources: Williams <a class="cite" href="#ref4">[4]</a>; Irwin <a class="cite" href="#ref5">[5]</a>; Anderson <a class="cite" href="#ref9">[9]</a>, <i>Fracture Mechanics: Fundamentals and Applications</i>, Tables 2.1 and 2.2; Tada, Paris and Irwin <a class="cite" href="#ref7">[7]</a>. θ is measured from the crack line ahead of the tip, positive anticlockwise; the crack faces are θ = ±180°.</footer>
+</div>
+
+<script>
+(() => {
+const R=document.documentElement, MONO='"IBM Plex Mono", ui-monospace, Menlo, monospace', C={};
+const keys=['surface','ink','muted','rule','accent','hot','cool'];
+const read=()=>{const s=getComputedStyle(R); keys.forEach(k=>C[k]=s.getPropertyValue('--'+k).trim()); draw();};
+const c=Math.cos,s=Math.sin;
+const F={
+  I:{cart:[['σxx',t=>c(t/2)*(1-s(t/2)*s(1.5*t))],['σyy',t=>c(t/2)*(1+s(t/2)*s(1.5*t))],['τxy',t=>c(t/2)*s(t/2)*c(1.5*t)]],
+     polar:[['σrr',t=>1.25*c(t/2)-.25*c(1.5*t)],['σθθ',t=>.75*c(t/2)+.25*c(1.5*t)],['τrθ',t=>.25*s(t/2)+.25*s(1.5*t)]]},
+  II:{cart:[['σxx',t=>-s(t/2)*(2+c(t/2)*c(1.5*t))],['σyy',t=>s(t/2)*c(t/2)*c(1.5*t)],['τxy',t=>c(t/2)*(1-s(t/2)*s(1.5*t))]],
+     polar:[['σrr',t=>-1.25*s(t/2)+.75*s(1.5*t)],['σθθ',t=>-.75*s(t/2)-.75*s(1.5*t)],['τrθ',t=>.25*c(t/2)+.75*c(1.5*t)]]},
+  III:{cart:[['τxz',t=>-s(t/2)],['τyz',t=>c(t/2)]],polar:[['τrz',t=>s(t/2)],['τθz',t=>c(t/2)]]}
+};
+let mode='I', sys='cart', hover=null;
+const cv=document.getElementById('plot'), ctx=cv.getContext('2d'), vals=document.getElementById('vals');
+let W=0,H=0;
+const fit=()=>{const d=Math.min(2,devicePixelRatio||1); W=cv.clientWidth; H=cv.clientHeight; if(!W) return; cv.width=W*d; cv.height=H*d; ctx.setTransform(d,0,0,d,0,0); draw();};
+const cols=()=>[C.accent,C.hot,C.cool,C.ink];
+function draw(){
+  if(!W||!C.ink) return;
+  const set=F[mode][sys], b={x:44,y:16,w:W-60,h:H-56};
+  const X=t=>b.x+(t+Math.PI)/(2*Math.PI)*b.w, Y=v=>b.y+b.h-(v+2.5)/5*b.h;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle=C.surface; ctx.fillRect(0,0,W,H);
+  ctx.font='11px '+MONO; ctx.lineWidth=1;
+  [-180,-90,0,90,180].forEach(d=>{const x=X(d*Math.PI/180); ctx.strokeStyle=C.rule; ctx.beginPath(); ctx.moveTo(x+.5,b.y); ctx.lineTo(x+.5,b.y+b.h); ctx.stroke(); ctx.fillStyle=C.muted; ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText(d+'°',x,b.y+b.h+4);});
+  [-2,-1,0,1,2].forEach(v=>{const y=Y(v); ctx.strokeStyle=v===0?C.muted:C.rule; ctx.beginPath(); ctx.moveTo(b.x,y+.5); ctx.lineTo(b.x+b.w,y+.5); ctx.stroke(); ctx.fillStyle=C.muted; ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillText(v,b.x-6,y);});
+  ctx.textAlign='right'; ctx.textBaseline='top'; ctx.fillText('θ',b.x+b.w,b.y+b.h+20);
+  ctx.textAlign='left'; ctx.fillText('lower face',b.x,b.y+b.h+20); ctx.textAlign='right'; ctx.fillText('upper face',b.x+b.w-14,b.y+b.h+20);
+  const cl=cols();
+  set.forEach(([n,f],i)=>{ctx.strokeStyle=cl[i]; ctx.lineWidth=2.2; ctx.beginPath(); for(let k=0;k<=240;k++){const t=-Math.PI+2*Math.PI*k/240; const P=[X(t),Y(f(t))]; k?ctx.lineTo(...P):ctx.moveTo(...P);} ctx.stroke();
+    const tl=-Math.PI+2*Math.PI*(0.12+0.25*i); ctx.fillStyle=cl[i]; ctx.textAlign='left'; ctx.textBaseline='bottom'; ctx.font='12px '+MONO; ctx.fillText('f '+n,X(tl)+4,Y(f(tl))-4); ctx.font='11px '+MONO;});
+  const t=hover??0;
+  ctx.strokeStyle=C.ink; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(X(t),b.y); ctx.lineTo(X(t),b.y+b.h); ctx.stroke(); ctx.setLineDash([]);
+  set.forEach(([n,f],i)=>{ctx.fillStyle=cl[i]; ctx.beginPath(); ctx.arc(X(t),Y(f(t)),4,0,7); ctx.fill();});
+  vals.innerHTML='<div><span>θ</span><strong>'+(t*180/Math.PI).toFixed(0)+'°</strong></div>'+set.map(([n,f],i)=>'<div><span style="color:'+cl[i]+'">f '+n+'</span><strong>'+f(t).toFixed(3)+'</strong></div>').join('');
+}
+cv.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect(); const u=((e.clientX-r.left)-44)/(r.width-60); hover=Math.max(-Math.PI,Math.min(Math.PI,-Math.PI+2*Math.PI*u)); draw();});
+cv.addEventListener('pointerdown',e=>cv.dispatchEvent(new PointerEvent('pointermove',e)));
+document.querySelectorAll('[data-mode]').forEach(btn=>btn.onclick=()=>{mode=btn.dataset.mode; document.querySelectorAll('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',x===btn)); draw();});
+document.querySelectorAll('[data-sys]').forEach(btn=>btn.onclick=()=>{sys=btn.dataset.sys; document.querySelectorAll('[data-sys]').forEach(x=>x.setAttribute('aria-pressed',x===btn)); draw();});
+new ResizeObserver(fit).observe(cv);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',read);
+new MutationObserver(read).observe(R,{attributes:true,attributeFilter:['data-theme']});
+read(); fit();
+})();
+</script>
+
+</body>
+</html>

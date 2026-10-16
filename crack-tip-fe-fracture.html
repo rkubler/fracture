@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fracture in FE Codes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;1,500&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: same lab-notebook sequence as the stress intensity page; each section a live figure beside its reasoning. */
+:root{
+  --bg:#edf0f3; --surface:#f9fafb; --ink:#152030; --muted:#566475; --rule:#cdd5de;
+  --accent:#1d58b8; --hot:#d9561a; --plate:#dfe5ec; --cool:#3f78cf;
+  --heat1:#f3cf74; --heat2:#e0661b; --heat3:#9b1230;
+  --f-display:"Spectral", Georgia, "Times New Roman", serif;
+  --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --s1:.8125rem; --s2:.9375rem; --s3:1.0625rem; --s4:1.375rem; --s5:clamp(1.9rem,4.2vw,2.75rem);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
+  --accent:#82abff; --hot:#ff8a3d; --plate:#1c2530; --cool:#5b92ea;
+  --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
+  --accent:#82abff; --hot:#ff8a3d; --plate:#1c2530; --cool:#5b92ea;
+  --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:var(--s2);line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:1180px;margin:0 auto}
+header{padding-block:44px 20px;display:grid;gap:14px}
+.eyebrow{font-family:var(--f-mono);font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:600;font-size:var(--s5);line-height:1.1;margin:0;text-wrap:balance;max-width:22ch}
+h1 em{font-style:italic;color:var(--accent);font-weight:500}
+.lede{max-width:66ch;margin:0;color:var(--muted);font-size:var(--s3)}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+nav.toc a{font-family:var(--f-mono);font-size:var(--s1);color:var(--ink);text-decoration:none;border:1px solid var(--rule);
+  padding:5px 10px;border-radius:999px;background:var(--surface)}
+nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--accent);color:var(--accent)}
+nav.toc b{color:var(--accent);font-weight:500;margin-right:6px}
+
+section.scene{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;padding-block:36px;border-top:1px solid var(--rule)}
+@media (max-width:860px){ section.scene{grid-template-columns:minmax(0,1fr);gap:18px} }
+.fig{display:grid;gap:10px;min-width:0;align-content:start}
+canvas{display:block;width:100%;aspect-ratio:16/10;max-width:100%;border-radius:6px;background:var(--surface);border:1px solid var(--rule);touch-action:none}
+.text{min-width:0;display:grid;gap:12px;align-content:start}
+.step{font-family:var(--f-mono);font-size:var(--s1);color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+h2{font-family:var(--f-display);font-weight:600;font-size:var(--s4);line-height:1.2;margin:0;text-wrap:balance}
+.text p{margin:0;max-width:62ch}
+.eq{font-family:var(--f-display);font-size:1.2rem;background:var(--surface);border:1px solid var(--rule);border-radius:6px;
+  padding:12px 14px;overflow-x:auto;white-space:nowrap}
+.eq small{display:block;font-family:var(--f-body);font-size:var(--s1);color:var(--muted);white-space:normal;margin-top:4px}
+.sym{font-family:var(--f-display);font-style:italic}
+sub,sup{font-size:.72em;line-height:0}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.ctl{display:grid;gap:2px;min-width:0;flex:1 1 170px}
+.ctl label{font-size:var(--s1);color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.ctl label output{font-family:var(--f-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select{font:inherit;font-size:var(--s1);padding:6px 8px;border-radius:6px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);max-width:100%}
+button{font:inherit;font-size:var(--s1);font-weight:500;cursor:pointer;border-radius:6px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--ink);padding:6px 12px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;border-right:1px solid var(--rule)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.readout div{background:var(--surface);padding:8px 10px;display:grid;gap:1px}
+.readout span{font-size:.75rem;color:var(--muted)}
+.readout strong{font-family:var(--f-mono);font-weight:500;font-size:1rem;font-variant-numeric:tabular-nums}
+.calc{font-family:var(--f-mono);font-size:var(--s1);background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:12px 14px;
+  display:grid;gap:4px;overflow-x:auto;font-variant-numeric:tabular-nums}
+.calc .res{color:var(--accent);font-weight:500;font-size:var(--s2)}
+.note a{color:var(--accent)}
+.note{font-size:var(--s1);color:var(--muted);border-left:2px solid var(--rule);padding-left:10px}
+.flag{font-family:var(--f-mono);font-size:.75rem;padding:2px 8px;border-radius:999px;border:1px solid currentColor;justify-self:start}
+.flag.ok{color:var(--accent)} .flag.warn{color:var(--hot)}
+ol.how{margin:0;padding-left:1.3em;display:grid;gap:4px;max-width:62ch}
+canvas.short{aspect-ratio:16/7}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--surface)}
+.tbl table{border-collapse:collapse;width:100%;font-size:var(--s1)}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+.tbl tr:last-child th,.tbl tr:last-child td{border-bottom:0}
+.tbl thead th{font-weight:600;color:var(--accent)}
+.tbl tbody th{font-weight:500;color:var(--muted);white-space:nowrap}
+footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font-size:var(--s1);max-width:80ch}
+.tdg{margin:0;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;display:grid;gap:6px;max-width:520px}
+.tdg svg{width:100%;height:auto;display:block}
+.tdg figcaption{font-size:var(--s1);color:var(--muted)}
+.tdg .mat{fill:var(--plate)} .tdg .cr{fill:var(--bg);stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round}
+.tdg .ax{stroke:var(--ink);stroke-width:1.3;fill:none} .tdg .ahd{fill:var(--ink)}
+.tdg .rr{stroke:var(--accent);stroke-width:2;stroke-dasharray:5 4} .tdg .arc{stroke:var(--accent);stroke-width:1.6;fill:none}
+.tdg .pt{fill:var(--hot)} .tdg .tip{fill:var(--hot)}
+.tdg text{font-family:var(--f-body);font-size:12px} .tdg .lbl{fill:var(--ink);font-family:var(--f-display);font-style:italic;font-size:16px}
+.tdg .acc{fill:var(--accent)} .tdg .mut{fill:var(--muted);font-size:11px}
+.ssy{display:grid;gap:12px;border-top:1px solid var(--rule);padding-top:14px}
+.ssy h3{font-family:var(--f-display);font-weight:600;font-size:1.15rem;margin:0}
+.ssy p{margin:0;max-width:62ch}
+.ssy-figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.ssy .kz{fill:var(--accent);fill-opacity:.14;stroke:var(--accent);stroke-width:1.5;stroke-dasharray:5 4}
+.ssy .pz{fill:var(--hot);fill-opacity:.45;stroke:var(--hot);stroke-width:1.5}
+.ssy .gr{stroke:var(--rule);stroke-width:1} .ssy .tk{fill:var(--muted);font-family:var(--f-mono);font-size:10px}
+.ssy .elc{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:5 4} .ssy .plc{fill:none;stroke:var(--hot);stroke-width:2.4}
+.ssy .shed{fill:var(--accent);fill-opacity:.2} .ssy .carry{fill:var(--hot);fill-opacity:.18}
+.ssy .ry{stroke:var(--accent);stroke-dasharray:2 3} .ssy .rp{stroke:var(--hot);stroke-dasharray:2 3}
+.ssy .hot{fill:var(--hot)} .ssy .tk.acc{fill:var(--accent)}
+.eq{position:relative;padding-right:56px}
+.eqno{position:absolute;right:12px;top:12px;font-family:var(--f-mono);font-size:var(--s1);color:var(--muted);font-style:normal}
+.eq small.src{color:var(--accent)}
+a.cite{color:var(--accent);text-decoration:none;font-family:var(--f-mono);font-size:.82em;margin-left:2px;white-space:nowrap}
+a.cite:hover{text-decoration:underline}
+.refs{border-top:1px solid var(--rule);padding-block:28px;display:grid;gap:10px}
+.refs h2{margin:0}
+.refs ol{margin:0;padding-left:1.8em;display:grid;gap:6px;max-width:90ch;font-size:var(--s1)}
+.refs li:target{background:var(--surface);outline:1px solid var(--accent);border-radius:4px}
+.cbar{display:grid;grid-template-columns:auto auto minmax(80px,1fr) auto;align-items:center;gap:8px;font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.cbar i{height:10px;border-radius:2px;border:1px solid var(--rule);background:linear-gradient(to right,#00008f,#0000ff,#00ffff,#ffff00,#ff0000,#800000)}
+.cbar .cbl{color:var(--ink)}
+.cfig{margin:0;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:8px;display:grid;gap:6px}
+.cfig img{width:100%;height:auto;display:block;background:#fff;border-radius:3px}
+.cfig figcaption{font-size:var(--s1);color:var(--muted)}
+
+.cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:18px 28px}
+.col{display:grid;gap:10px;align-content:start;min-width:0}
+.col h3{font-family:var(--f-display);font-weight:600;font-size:1.1rem;margin:0}
+.col p{margin:0}
+.tdg .el{fill:var(--surface);stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round}
+.tdg .nd{fill:var(--ink)} .tdg .nd2{fill:var(--accent)} .tdg .qp{fill:var(--hot);stroke:var(--surface);stroke-width:1.2}
+section.scene.one .text .tbl{max-width:none}
+#f3 .readout strong{font-size:.85rem}
+pre.code{margin:0;font-family:var(--f-mono);font-size:.78rem;line-height:1.5;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;overflow-x:auto;white-space:pre;max-width:100%}
+h3.sub{font-family:var(--f-display);font-weight:600;font-size:1.1rem;margin:6px 0 0}
+ul.links{margin:0;padding-left:1.2em;display:grid;gap:6px}
+ul.links a,.col a,.refs a{color:var(--accent)}
+#f3 .readout{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+a.back{color:var(--accent);text-decoration:none;text-transform:none;letter-spacing:0}
+a.back:hover{text-decoration:underline}
+section.scene.one{grid-template-columns:minmax(0,1fr)}
+section.scene.one .text p, section.scene.one .tbl{max-width:80ch}
+.tdg.wide{max-width:600px}
+.eq.wrap{white-space:normal}
+.tbox{display:grid;gap:10px;background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:6px;padding:14px 16px}
+.tbox h3{font-family:var(--f-display);font-weight:600;font-size:1.1rem;margin:0}
+.tbox p{margin:0;max-width:62ch}
+@media (max-width:560px){ #mc{aspect-ratio:4/5} }
+[hidden]{display:none!important}
+ol.how>li{min-width:0} ol.how .eq{margin-top:6px}
+.tdg .gam{fill:none;stroke:var(--accent);stroke-width:2.4}
+.tdg .gam2{fill:none;stroke:var(--hot);stroke-width:2.4}
+.tdg .area{fill:var(--accent);fill-opacity:.13}
+.tdg .face{stroke:var(--ink);stroke-width:1.6;stroke-dasharray:4 3}
+.tdg .dsx{fill:none;stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.tdg .nrm{stroke:var(--accent);stroke-width:1.8} .tdg .trc{stroke:var(--hot);stroke-width:1.8}
+.tdg .dir{fill:none;stroke:var(--accent);stroke-width:1.6} .tdg .dir2{fill:none;stroke:var(--hot);stroke-width:1.6}
+.tdg .ahh{fill:var(--hot)} .tdg .aha{fill:var(--accent)} .tdg .hot{fill:var(--hot)}
+
+/* full-width introduction and author credit */
+header h1,header .lede{max-width:none}
+.credit{margin:0;font-size:.8125rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px}
+.credit b{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+  <div class="eyebrow"><a class="back" href="crack-tip-stress-intensity.html">← Stress intensity at the crack tip</a> · Computational fracture mechanics</div>
+  <h1>K and J in <em>finite element</em> software</h1>
+  <p class="lede">How commercial FE codes model a crack, why the mesh at the tip needs special treatment, and how K and J are extracted from the results. The central figure is a real finite element solution, computed in your browser, on a spider-web mesh you can change.</p>
+  <p class="credit"><b>Author:</b> Dr Régis Kubler, Arts et Métiers Institute of Technology. Developed with the assistance of Claude Opus 5.5 (Anthropic), October 2026. Code: MIT · Documentation: CC BY 4.0.</p>
+  <nav class="toc" aria-label="Sections">
+    <a href="index.html"><b>⌂</b>Home</a>
+    <a href="#f1"><b>1</b>The workflow</a>
+    <a href="#f2"><b>2</b>Why ordinary elements fail</a>
+    <a href="#f3"><b>3</b>Spider-web mesh, live</a>
+    <a href="#f4"><b>4</b>Extracting K and J</a>
+    <a href="#f5"><b>5</b>Collapsed-element variants</a>
+    <a href="#f6"><b>6</b>Mesh guidelines, 3D and XFEM</a>
+    <a href="#f7"><b>7</b>Abaqus how-to</a>
+    <a href="#links"><b>↗</b>Useful links</a>
+    <a href="crack-tip-j-integral.html"><b>+</b>J-integral page</a>
+    <a href="#refs"><b>§</b>References</a>
+  </nav>
+</header>
+
+<!-- 1 -->
+<section class="scene one" id="f1">
+  <div class="text">
+    <div class="step">Section 1 · The workflow</div>
+    <h2>What an FE code needs to know about a crack</h2>
+    <p>A crack is a cut in the mesh with two traction-free faces that meet at a tip (2D) or a front (3D). The faces share coordinates but not nodes, so they can open. All mainstream codes (Abaqus <a class="cite" href="#ref17">[17]</a>, Ansys <a class="cite" href="#ref18">[18]</a> and others) follow the same steps.</p>
+    <ol class="how">
+      <li><b>Define the crack.</b> Mark the crack faces as a seam (duplicate nodes along the faces) or build the cut into the geometry. Define the tip or front and the direction of virtual crack extension, the vector q (along x in the notation of the other pages).</li>
+      <li><b>Mesh the tip region with a focused "spider-web" mesh.</b> Concentric rings of elements around the tip, with the innermost ring made of collapsed quadratic elements whose mid-side nodes are moved to the quarter points (Section 2). Rings make it easy to define integration domains.</li>
+      <li><b>Solve.</b> A linear elastic analysis for K, or an elastic–plastic one (small or finite strain) for J.</li>
+      <li><b>Extract fracture parameters.</b> Request J, K<sub>I</sub>, K<sub>II</sub>, K<sub>III</sub> and the T-stress over several contours (rings). Codes use the domain integral for J and the interaction integral for K and T (Section 4); displacement extrapolation and the virtual crack closure technique are alternatives.</li>
+      <li><b>Check.</b> Values should be the same on all contours except the first one or two. If they drift, the mesh or the model is wrong.</li>
+    </ol>
+    <div class="tbl"><table>
+      <thead><tr><th>Task</th><th>Abaqus</th><th>Ansys Mechanical (APDL)</th></tr></thead>
+      <tbody>
+        <tr><th>Crack faces</th><td>Seam (duplicate nodes) or a modelled cut</td><td>Modelled cut, or pre-meshed crack in Workbench</td></tr>
+        <tr><th>Singular elements</th><td>Collapsed element side, mid-side parameter 0.25, tied or free duplicate nodes</td><td>KSCON command (quarter-point elements around a keypoint)</td></tr>
+        <tr><th>J, K, T</th><td>*CONTOUR INTEGRAL, TYPE = J, K FACTORS, T-STRESS, with a number of contours</td><td>CINT command, TYPE = JINT, SIFS, TSTRESS</td></tr>
+        <tr><th>Displacement extrapolation</th><td>User post-processing</td><td>KCALC command</td></tr>
+        <tr><th>VCCT</th><td>VCCT debond option for crack growth</td><td>CINT, TYPE = VCCT</td></tr>
+        <tr><th>XFEM</th><td>Enriched elements, crack without conforming mesh</td><td>XFEM with singularity-based or phantom-node enrichment</td></tr>
+      </tbody></table></div>
+    <p class="note">Command names are those documented in the user guides of recent releases <a class="cite" href="#ref17">[17]</a><a class="cite" href="#ref18">[18]</a>; other codes (MSC Marc, Code_Aster, LS-DYNA, FRANC2D/3D) offer the same ingredients under other names.</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="scene" id="f2">
+  <div class="fig">
+    <canvas id="ec" aria-label="Strain along a quadratic element next to the crack tip for different mid-side node positions"></canvas>
+    <div class="controls">
+      <div class="ctl"><label for="em">Mid-side node position m (as a fraction of L) <output id="emo"></output></label><input type="range" id="em" min="0.2" max="0.5" step="0.005" value="0.5"></div>
+      <div class="seg" role="group" aria-label="Preset"><button data-em="0.5" aria-pressed="true">Standard ½</button><button data-em="0.25" aria-pressed="false">Quarter point ¼</button></div>
+    </div>
+    <div class="readout">
+      <div><span>Jacobian dx/dξ at the tip</span><strong id="eoj">—</strong></div>
+      <div><span>Strain at the tip</span><strong id="eos">—</strong></div>
+      <div><span>Strain error at x = L/100</span><strong id="eoe">—</strong></div>
+    </div>
+  </div>
+  <div class="text">
+    <div class="step">Section 2 · The singularity problem</div>
+    <h2>Polynomial elements cannot follow 1/√r, unless the mapping is distorted</h2>
+    <p>Near the tip the displacements vary as √r and the strains and stresses as 1/√r (equations of Williams <a class="cite" href="#ref12">[12]</a> and Irwin <a class="cite" href="#ref13">[13]</a>). Ordinary elements interpolate displacements with polynomials, so their strains stay finite at the tip. Refining the mesh helps only slowly, and the nodes closest to the tip are always the least accurate.</p>
+    <p>Henshell and Shaw <a class="cite" href="#ref1">[1]</a> and Barsoum <a class="cite" href="#ref2">[2]</a> found a remarkably simple fix. Take an ordinary 8-node quadratic element and move the mid-side nodes on the sides that touch the tip from the middle to the quarter point. Along such a side, of length L, the isoparametric mapping becomes</p>
+    <div class="eq"><span class="eqno">(1)</span>x = L(1 + ξ)²/4 &nbsp;⇒&nbsp; ξ = 2√(x/L) − 1
+      <small>so the quadratic interpolation u = a<sub>0</sub> + a<sub>1</sub>ξ + a<sub>2</sub>ξ² becomes u = b<sub>0</sub> + b<sub>1</sub>√x + b<sub>2</sub>x, and ε = du/dx contains b<sub>1</sub>/(2√x).</small>
+      <small class="src">Source: Henshell &amp; Shaw <a class="cite" href="#ref1">[1]</a>; Barsoum <a class="cite" href="#ref2">[2]</a></small></div>
+    <p>The figure shows one element side with nodes at 0, mL and L, carrying the exact √x displacement at its nodes. With m = ½ the strain is finite at the tip. With m = ¼ the Jacobian dx/dξ vanishes at the tip and the element reproduces the 1/√x singularity exactly. Below ¼ the Jacobian changes sign inside the element, which is not allowed.</p>
+    <p class="note">No new element type or special code is needed: the singularity comes from where you put the nodes. This is why every major FE code uses quarter-point elements for LEFM.</p>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="scene" id="f3">
+  <div class="fig">
+    <canvas id="fm" aria-label="Spider-web finite element mesh around the crack tip, coloured by the stress result"></canvas>
+    <div class="cbar" id="fmb" aria-label="Colour scale"><span class="cbl">—</span><span>—</span><i></i><span>—</span></div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Tip elements"><button data-fe="0.5" aria-pressed="false">Standard Q8</button><button data-fe="0.25" aria-pressed="true">Quarter-point Q8</button></div>
+      <label class="ctl" style="flex:0 1 auto">Colour<select id="fcol"><option value="err" selected>σyy error vs exact</option><option value="syy">σyy (log scale)</option><option value="none">mesh only</option></select></label>
+      <label class="ctl" style="flex:0 1 auto">View<select id="fview"><option value="1">whole model</option><option value="5" selected>tip region ×5</option><option value="25">tip element ×25</option></select></label>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="fNr">Rings <output id="fNro"></output></label><input type="range" id="fNr" min="2" max="14" step="1" value="8"></div>
+      <div class="ctl"><label for="fNs">Sectors over 180° <output id="fNso"></output></label><input type="range" id="fNs" min="2" max="16" step="1" value="8"></div>
+      <div class="ctl"><label for="fg">Grading towards the tip <output id="fgo"></output></label><input type="range" id="fg" min="1" max="3" step="0.1" value="1.5"></div>
+      <div class="ctl"><label for="fJ">Highlight J contour <output id="fJo"></output></label><input type="range" id="fJ" min="1" max="8" step="1" value="3"></div>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Element sides"><button data-fs="1" aria-pressed="true">Straight sides</button><button data-fs="0" aria-pressed="false">Curved (arc) sides</button></div>
+    </div>
+    <canvas id="fk" class="short" aria-label="Apparent K along the crack face and J on each contour"></canvas>
+    <div class="readout">
+      <div><span>Model size</span><strong id="fo0">—</strong></div>
+      <div><span>K, displacement extrapolation</span><strong id="fo1">—</strong></div>
+      <div><span>J, contour 1</span><strong id="fo2">—</strong></div>
+      <div><span>J, outer contours (mean)</span><strong id="fo3">—</strong></div>
+      <div><span>K = √(J E′)</span><strong id="fo4">—</strong></div>
+      <div><span>Exact K · J</span><strong id="fo5">—</strong></div>
+    </div>
+  </div>
+  <div class="text">
+    <div class="step">Section 3 · A spider-web mesh, solved live</div>
+    <h2>Change the mesh and watch K and J respond</h2>
+    <p>This is a genuine finite element analysis, run in your browser each time you change a setting. It uses the standard boundary-layer model: a disc of radius R = 10 mm around the tip, with the exact mode I displacements for K<sub>I</sub> = 50 MPa√m imposed on its edge, plane strain, E = 200 GPa, ν = 0.3. Only the upper half is meshed, with symmetry on the ligament (u<sub>y</sub> = 0), and the crack face is free. The exact answer everywhere inside is the Williams–Irwin field, so every error you see is a mesh error.</p>
+    <ol class="how">
+      <li><b>Elements.</b> 8-node quadratic quadrilaterals (Q8), integrated with 3×3 Gauss points. The innermost ring is collapsed: the three nodes on the side facing the tip are merged into one tip node, which turns each quadrilateral into a triangle.</li>
+      <li><b>Quarter points.</b> The orange nodes are the radial mid-side nodes of the tip ring. Switch between "Standard Q8" (mid-side at L/2) and "Quarter-point Q8" (at L/4) and compare the error map near the tip.</li>
+      <li><b>Displacement extrapolation.</b> The lower chart plots the apparent K<sub>app</sub>(r) from the crack-face opening, equation (2), and extrapolates it to r = 0 from the nodes of the first element.</li>
+      <li><b>Domain J.</b> Each bar is J from one ring of elements, equation (5). The highlighted ring on the mesh is the domain of the selected contour.</li>
+    </ol>
+    <p>Things to try. With standard elements the extrapolated K is about 9–10% low and refining the mesh barely helps, while J from the outer contours is within about 0.5%. With quarter-point elements the extrapolated K is within about 1% even on a coarse mesh. Contour 1 is always the least accurate J, because it contains the tip elements. Switch to curved sides: the quarter-point element loses most of its advantage (K about 10% low again), because the singular mapping of equation (1) needs straight sides from the tip. Reduce the sectors to 2 and every result degrades, because the angular variation of the field is no longer resolved.</p>
+    <p class="note">J is accurate even with poor tip elements because the domain integral weights the solution away from the tip, where the mesh is good. This is the practical reason codes report J (and K via the interaction integral) rather than nodal stresses or displacements.</p>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="scene one" id="f4">
+  <div class="text">
+    <div class="step">Section 4 · Extraction methods</div>
+    <h2>Four ways to get K or J from an FE solution</h2>
+    <div class="cols2">
+      <div class="col">
+        <h3>Displacement extrapolation</h3>
+        <p>Use the opening of the crack faces, v(r) for one face, and the near-tip solution <a class="cite" href="#ref15">[15]</a>:</p>
+        <div class="eq"><span class="eqno">(2)</span>K<sub>app</sub>(r) = (2μ/(κ + 1)) √(2π/r) v(r)
+          <small>κ = 3 − 4ν in plane strain, (3 − ν)/(1 + ν) in plane stress. Plot K<sub>app</sub> against r and extrapolate to r = 0, ignoring the nodes nearest the tip.</small>
+          <small class="src">Source: Chan, Tuba &amp; Wilson <a class="cite" href="#ref15">[15]</a>; Anderson <a class="cite" href="#ref11">[11]</a> §12.1</small></div>
+        <p>With quarter-point elements, the two face nodes of the tip element (b at L/4, c at L) give K in closed form <a class="cite" href="#ref4">[4]</a>:</p>
+        <div class="eq"><span class="eqno">(3)</span>K<sub>I</sub> = (2μ/(κ + 1)) √(2π/L) (4v<sub>b</sub> − v<sub>c</sub>)
+          <small>v<sub>b</sub>, v<sub>c</sub> are the opening displacements of one face. With both faces modelled, replace 4v<sub>b</sub> − v<sub>c</sub> by [4(v<sub>b</sub> − v<sub>d</sub>) − (v<sub>c</sub> − v<sub>e</sub>)]/2.</small>
+          <small class="src">Source: Shih, de Lorenzi &amp; German <a class="cite" href="#ref4">[4]</a></small></div>
+      </div>
+      <div class="col">
+        <h3>Virtual crack closure (VCCT)</h3>
+        <p>Irwin's crack closure argument: the energy released by extending the crack by Δa equals the work needed to close it again. With nodal forces at the tip and the opening one element behind it <a class="cite" href="#ref5">[5]</a>:</p>
+        <div class="eq"><span class="eqno">(4)</span>G<sub>I</sub> = F<sub>y</sub> Δv / (2 B Δa), &nbsp; K<sub>I</sub> = √(G<sub>I</sub> E′)
+          <small>For 4-node elements of equal size Δa at the tip. Quadratic and quarter-point elements need weighted combinations of corner and mid-side forces. G<sub>II</sub>, G<sub>III</sub> follow from the other force components.</small>
+          <small class="src">Source: Rybicki &amp; Kanninen <a class="cite" href="#ref5">[5]</a>; Krueger <a class="cite" href="#ref14">[14]</a></small></div>
+        <p>VCCT needs no singular elements and is popular for delamination in composites.</p>
+      </div>
+      <div class="col">
+        <h3>Domain integral for J</h3>
+        <p>The contour integral of Rice <a class="cite" href="#ref10">[10]</a> is converted into an area (2D) or volume (3D) integral with a smooth weight q that is 1 at the tip and 0 on the outer edge of the domain <a class="cite" href="#ref6">[6]</a><a class="cite" href="#ref7">[7]</a>:</p>
+        <div class="eq wrap"><span class="eqno">(5)</span>J = ∫<sub>A</sub> ( σ<sub>ij</sub> ∂u<sub>i</sub>/∂x<sub>1</sub> − W δ<sub>1j</sub> ) ∂q/∂x<sub>j</sub> dA
+          <small>Evaluated at the Gauss points, where stresses are most accurate. Each ring of elements gives one "contour". In 3D q is a virtual extension of the crack front, and J is obtained point by point along the front.</small>
+          <small class="src">Source: Li, Shih &amp; Needleman <a class="cite" href="#ref6">[6]</a>; Shih, Moran &amp; Nakamura <a class="cite" href="#ref7">[7]</a></small></div>
+      </div>
+      <div class="col">
+        <h3>Interaction integral for K and T</h3>
+        <p>J gives only the total energy, (K<sub>I</sub>² + K<sub>II</sub>²)/E′ + K<sub>III</sub>²/2μ. To separate the modes, superpose a known auxiliary field (for example a pure mode I field with K = 1) on the FE field; the cross term of J is <a class="cite" href="#ref8">[8]</a></p>
+        <div class="eq wrap"><span class="eqno">(6)</span>I = ∫<sub>A</sub> ( σ<sub>ij</sub> ∂u<sub>i</sub><sup>aux</sup>/∂x<sub>1</sub> + σ<sub>ij</sub><sup>aux</sup> ∂u<sub>i</sub>/∂x<sub>1</sub> − σ<sub>ik</sub> ε<sub>ik</sub><sup>aux</sup> δ<sub>1j</sub> ) ∂q/∂x<sub>j</sub> dA = 2 K<sub>I</sub> K<sub>I</sub><sup>aux</sup>/E′
+          <small>Repeat with a mode II auxiliary field for K<sub>II</sub>. With the auxiliary field of a point force on the crack line, the same integral gives the T-stress.</small>
+          <small class="src">Source: Yau, Wang &amp; Corten <a class="cite" href="#ref8">[8]</a></small></div>
+      </div>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Method</th><th>Uses</th><th>Mesh sensitivity</th><th>Gives</th></tr></thead>
+      <tbody>
+        <tr><th>Stress or displacement extrapolation</th><td>Nodal values near the tip</td><td>High; needs quarter-point elements to be accurate</td><td>K<sub>I</sub>, K<sub>II</sub>, K<sub>III</sub> separately, LEFM only</td></tr>
+        <tr><th>VCCT</th><td>Tip nodal forces and opening behind the tip</td><td>Moderate; needs regular elements at the tip</td><td>G<sub>I</sub>, G<sub>II</sub>, G<sub>III</sub>, LEFM</td></tr>
+        <tr><th>Domain J</th><td>Gauss-point fields in a ring of elements</td><td>Low; path independent</td><td>J, elastic or elastic–plastic</td></tr>
+        <tr><th>Interaction integral</th><td>As domain J, plus auxiliary fields</td><td>Low</td><td>K<sub>I</sub>, K<sub>II</sub>, K<sub>III</sub>, T, linear elastic</td></tr>
+      </tbody></table></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="scene" id="f5">
+  <div class="fig">
+    <figure class="tdg wide"><svg viewBox="0 0 360 200" role="img" aria-label="Collapsed quadrilateral element: tied nodes for elastic analysis, free duplicate nodes that let the tip blunt for plastic analysis">
+      <rect class="mat" x="0" y="0" width="360" height="200"/>
+      <g transform="translate(20 20)">
+        <path class="el" d="M10 80 L140 20 L140 140 Z"/>
+        <circle class="nd" cx="140" cy="20" r="4"/><circle class="nd" cx="140" cy="80" r="4"/><circle class="nd" cx="140" cy="140" r="4"/>
+        <circle class="qp" cx="42.5" cy="65" r="4.5"/><circle class="qp" cx="42.5" cy="95" r="4.5"/>
+        <circle class="tip" cx="10" cy="80" r="6"/>
+        <text class="mut" x="0" y="112">3 nodes tied</text><text class="mut" x="0" y="126">into one</text>
+        <text class="lbl" x="40" y="168">LEFM: 1/√r</text>
+        <text class="mut" x="46" y="56">¼</text>
+      </g>
+      <g transform="translate(200 20)">
+        <path class="el" d="M14 72 L140 20 L140 140 L14 88 Z"/>
+        <circle class="nd" cx="140" cy="20" r="4"/><circle class="nd" cx="140" cy="80" r="4"/><circle class="nd" cx="140" cy="140" r="4"/>
+        <circle class="nd2" cx="77" cy="46" r="4"/><circle class="nd2" cx="77" cy="114" r="4"/>
+        <circle class="tip" cx="14" cy="72" r="4"/><circle class="tip" cx="14" cy="88" r="4"/><circle class="tip" cx="14" cy="80" r="4"/>
+        <text class="mut" x="0" y="112">nodes free:</text><text class="mut" x="0" y="126">tip can blunt</text>
+        <text class="lbl" x="20" y="168">perfect plasticity: 1/r</text>
+        <text class="mut" x="80" y="40">½</text>
+      </g>
+    </svg><figcaption>Left: collapsed Q8 with tied tip nodes and quarter-point mid-side nodes (orange), the standard LEFM element. Right: the same element with the tip nodes left free and mid-side nodes at the middle; the tip can open (blunt) and the strain varies as 1/r.</figcaption></figure>
+  </div>
+  <div class="text">
+    <div class="step">Section 5 · Collapsed-element variants</div>
+    <h2>Where the nodes go decides the singularity</h2>
+    <p>Barsoum <a class="cite" href="#ref3">[3]</a> showed that the same collapsed 8-node element can represent different singularities, depending on whether the three nodes at the tip are tied together and where the mid-side nodes sit. FE codes expose exactly these two switches.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Tip nodes</th><th>Mid-side nodes</th><th>Strain singularity</th><th>Use</th></tr></thead>
+      <tbody>
+        <tr><th>Tied</th><td>¼ point</td><td>1/√r</td><td>Linear elastic (LEFM): K, J, T</td></tr>
+        <tr><th>Free</th><td>½ point</td><td>1/r</td><td>Perfectly plastic material, small strain</td></tr>
+        <tr><th>Free</th><td>¼ point</td><td>1/√r and 1/r</td><td>Elastic–plastic with hardening (the HRR exponent n/(n+1) lies between ½ and 1)</td></tr>
+        <tr><th>Tied</th><td>½ point</td><td>none</td><td>Standard element, slow convergence</td></tr>
+      </tbody></table></div>
+    <p>For elastic–plastic J analyses with large deformation, a sharp tip is replaced by a small blunt notch (a "keyhole" with a root radius well below the expected crack-tip opening) and ordinary, well-shaped elements, because the tip blunts and the singular elements would distort badly <a class="cite" href="#ref16">[16]</a>. J from the outer contours is insensitive to these details.</p>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="scene one" id="f6">
+  <div class="text">
+    <div class="step">Section 6 · Practice</div>
+    <h2>Mesh guidelines, 3D crack fronts and XFEM</h2>
+    <div class="cols2">
+      <div class="col">
+        <h3>Checklist for a 2D spider-web mesh</h3>
+        <ol class="how">
+          <li>Quadratic elements everywhere near the tip; collapsed quarter-point elements in the first ring.</li>
+          <li>Straight sides on the tip elements, with the quarter-point nodes exactly on the rays from the tip.</li>
+          <li>Sector angles of about 10° to 22.5° (8 to 16 sectors over 180°, 16 to 32 around a full tip).</li>
+          <li>Tip element size L small compared with the crack length, typically a/20 or less, and the K-field zone covered by several rings.</li>
+          <li>Several rings (4 to 10) of gradually growing size, so that J can be checked on several contours.</li>
+          <li>Report the converged contour values, not contour 1, and confirm that the spread between contours is small (often &lt; 1–2%).</li>
+          <li>For plasticity, small-strain: free tip nodes; finite strain: a blunt notch with fine regular elements.</li>
+        </ol>
+      </div>
+      <div class="col">
+        <h3>3D crack fronts</h3>
+        <p>The 2D spider web is swept along the crack front: collapsed 20-node bricks become wedges with quarter-point nodes, and each slice of elements along the front is a "tube". J, K and T are evaluated at every node along the front with a 3D domain integral, so the result varies along the front, for example from plane strain in the middle of a thick plate to a lower constraint at the free surfaces <a class="cite" href="#ref7">[7]</a>.</p>
+        <h3>XFEM</h3>
+        <p>The extended finite element method <a class="cite" href="#ref9">[9]</a> avoids meshing the crack at all. Elements cut by the crack get a discontinuous (Heaviside) enrichment, and elements around the tip get the √r angular functions of the Williams field. The crack can then run through a fixed mesh, which is convenient for crack growth. K is still extracted with the interaction integral; accuracy depends on the enrichment radius and on the quadrature in cut elements.</p>
+        <h3>Linking back</h3>
+        <p>Every FE result here is checked the same way as on the other pages: K against handbook solutions where they exist, and J against K²/E′ for elastic models. See the <a href="crack-tip-stress-intensity.html">stress intensity page</a> and the <a href="crack-tip-j-integral.html">J-integral page</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="scene one" id="f7">
+  <div class="text">
+    <div class="step">Section 7 · Doing it in Abaqus</div>
+    <h2>A 2D crack in Abaqus/CAE, step by step</h2>
+    <p>The live model in Section 3 is exactly what Abaqus builds when you follow the steps below: a half model with a symmetry plane, a partitioned spider web, collapsed quarter-point CPE8 elements at the tip, and one J value per ring of elements. Menu names are those of Abaqus/CAE 2017 and later <a class="cite" href="#ref19">[19]</a><a class="cite" href="#ref20">[20]</a><a class="cite" href="#ref21">[21]</a>; recent releases keep the same workflow.</p>
+    <div class="cols2">
+      <div class="col">
+        <h3>Abaqus/CAE workflow</h3>
+        <ol class="how">
+          <li><b>Part, partitions.</b> With <i>Partition Face: Sketch</i>, draw a small circle centred on the tip (it holds the collapsed ring), a larger concentric circle (the spider web) and radial lines. The partitions make the rings of elements, and each ring becomes one contour.</li>
+          <li><b>Crack faces.</b> If the crack lies on a symmetry plane, model half the body and skip the seam (step 4 sets the symmetry). Otherwise use <i>Interaction module → Special → Crack → Assign Seam</i> on the crack line, so that the mesh gets duplicate nodes that can separate <a class="cite" href="#ref22">[22]</a>.</li>
+          <li><b>Crack definition.</b> <i>Special → Crack → Create</i>, type <i>Contour integral</i>. Pick the crack front (for a sharp 2D crack, the tip vertex or the small circular region around it), then the crack tip, then the extension direction: <i>q vectors</i> (two points along the crack, pointing into the uncracked ligament) or <i>Normal to crack plane</i>.</li>
+          <li><b>Edit Crack, General tab.</b> Tick <i>On symmetry plane</i> for a half model; Abaqus then doubles J (the SYMM parameter). Check that the blue q arrow points ahead of the crack.</li>
+          <li><b>Edit Crack, Singularity tab.</b> <i>Midside node parameter</i> = 0.25 and <i>Collapsed element side, single node</i> for LEFM. For plasticity see the tips below.</li>
+          <li><b>Mesh.</b> In the circular partition: <i>Mesh Controls → Quad-dominated, Sweep</i>; Abaqus degenerates the first ring into collapsed quadrilaterals. Elsewhere: <i>Structured</i> or <i>Free</i> quads. <i>Element Type</i>: Standard, Quadratic, Plane strain (CPE8 or CPE8R). Seed the circle edges with 8 to 16 elements over 180° and bias the radial edges towards the tip.</li>
+          <li><b>Step, history output.</b> <i>Create History Output → Domain: Crack</i>, <i>Number of contours</i> 5 to 10, <i>Type</i> J-integral. Create separate requests for <i>Stress intensity factors</i> (choose the crack initiation criterion: maximum tangential stress, maximum energy release rate or K<sub>II</sub> = 0) and for <i>T-stress</i>.</li>
+          <li><b>Results.</b> Values are written per contour to the .dat file and, with history output, to the .odb (<i>Visualization → Result → History Output</i>, or <i>Report → XY</i>).</li>
+        </ol>
+      </div>
+      <div class="col">
+        <h3>The same requests in the input file</h3>
+        <p>For the half model of Section 3, with a node set TIPFRONT containing the tip node TIPNODE and q along x:</p>
+<pre class="code">*STEP
+*STATIC
+...
+*CONTOUR INTEGRAL, CONTOURS=8, CRACK TIP NODES, SYMM, TYPE=J, OUTPUT=BOTH
+TIPFRONT, TIPNODE, 1.0, 0.0
+*CONTOUR INTEGRAL, CONTOURS=8, CRACK TIP NODES, SYMM, TYPE=K FACTORS, DIRECTION=MTS
+TIPFRONT, TIPNODE, 1.0, 0.0
+*CONTOUR INTEGRAL, CONTOURS=8, CRACK TIP NODES, SYMM, TYPE=T-STRESS
+TIPFRONT, TIPNODE, 1.0, 0.0
+*END STEP</pre>
+        <p class="note">Data line: crack-front node set, crack-tip node (or set), q<sub>x</sub>, q<sub>y</sub> (and q<sub>z</sub> in 3D). TYPE = J, C, K FACTORS or T-STRESS; DIRECTION = MTS, MERR or KII0 applies to K FACTORS only. Without OUTPUT, results go to the .dat file only <a class="cite" href="#ref23">[23]</a>.</p>
+        <h3>XFEM alternative</h3>
+        <p><i>Special → Crack → Create → XFEM</i> (keyword *ENRICHMENT, TYPE = STATIONARY CRACK) inserts the crack in an existing mesh with no partitions, seam or singular elements <a class="cite" href="#ref24">[24]</a>. Contour integrals are then requested with CRACK NAME = the enriched feature. Use a locally refined mesh around the tip; the first contours are again the least accurate.</p>
+      </div>
+    </div>
+    <h3 class="sub">Tips and common pitfalls</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Topic</th><th>Advice</th></tr></thead>
+      <tbody>
+        <tr><th>Singularity settings</th><td>LEFM: midside 0.25, single node (1/√r). Perfect plasticity: midside 0.5, duplicate nodes (1/r). Hardening plasticity: midside 0.25, duplicate nodes (1/√r and 1/r). With first-order elements only the duplicate-node option applies <a class="cite" href="#ref20">[20]</a>.</td></tr>
+        <tr><th>Straight sides</th><td>Keep the tip-ring elements straight-sided (Section 3 shows why). Do not let the mesher curve them to follow a partition circle of large radius; a small first circle helps.</td></tr>
+        <tr><th>Which contours to report</th><td>Ignore contours 1 and 2, which contain the tip elements. Report the mean of the converged contours and their spread; a spread above 1–2% means the mesh needs work <a class="cite" href="#ref25">[25]</a>.</td></tr>
+        <tr><th>q direction</th><td>A q vector pointing back into the crack gives J &lt; 0. In 3D, check the arrows at every front node, especially on curved fronts.</td></tr>
+        <tr><th>Symmetry</th><td>On a symmetry plane, use the symmetry option instead of a seam. Forgetting it halves J and divides K by √2.</td></tr>
+        <tr><th>What is available for which material</th><td>Stress intensity factors and T-stress need a linear elastic (homogeneous or bimaterial interface) model. J is available for elastic–plastic materials and is path independent for monotonic, proportional loading (deformation-plasticity assumption).</td></tr>
+        <tr><th>Units</th><td>Abaqus has no units. With N and mm, J comes out in N/mm = kJ/m² and K in MPa√mm; divide K by √1000 ≈ 31.6 to get MPa√m.</td></tr>
+        <tr><th>Large deformation</th><td>With NLGEOM and plasticity, replace the sharp tip by a small blunt notch meshed with regular quadratic elements, and use the outer contours.</td></tr>
+        <tr><th>3D cracks</th><td>Sweep the spider web along the front with C3D20R; the collapsed elements become wedges. J, K and T are given per front node. Reduced integration avoids oscillation of the first contour along the front; values at free-surface nodes are less reliable <a class="cite" href="#ref25">[25]</a><a class="cite" href="#ref26">[26]</a>.</td></tr>
+        <tr><th>Step type</th><td>Contour integrals cannot be requested in a linear perturbation step; use a general *STATIC step.</td></tr>
+        <tr><th>Check the mesh</th><td>Colour the mesh by element type to see the collapsed ring, and query the crack-face nodes to make sure the two faces do not share nodes.</td></tr>
+      </tbody></table></div>
+  </div>
+</section>
+
+<!-- links -->
+<section class="scene one" id="links">
+  <div class="text">
+    <div class="step">Useful links</div>
+    <h2>Abaqus documentation and tutorials</h2>
+    <p>The official SIMULIA documentation for your release is on the <a href="https://help.3ds.com/" target="_blank" rel="noopener">Dassault Systèmes help portal</a> (needs a 3DEXPERIENCE login). The links below point to a public copy of the Abaqus 2017 documentation and to free tutorials.</p>
+    <div class="cols2">
+      <div class="col">
+        <h3>Abaqus/CAE user guide</h3>
+        <ul class="links">
+          <li><a href="https://abaqus-docs.mit.edu/2017/English/SIMACAECAERefMap/simacae-m-EngCrack-sb.htm" target="_blank" rel="noopener">Using contour integrals to model fracture mechanics</a> (chapter overview)</li>
+          <li><a href="https://abaqus-docs.mit.edu/2017/English/SIMACAECAERefMap/simacae-c-engconccrackoverview.htm" target="_blank" rel="noopener">Performing a contour integral analysis</a></li>
+          <li><a href="https://abaqus-docs.mit.edu/2017/English/SIMACAECAERefMap/simacae-t-enghelpcrack.htm" target="_blank" rel="noopener">Creating a contour integral crack</a></li>
+          <li><a href="https://abaqus-docs.mit.edu/2017/English/SIMACAECAERefMap/simacae-t-enghelpcrackcracksingularity.htm" target="_blank" rel="noopener">Controlling the singularity at the crack tip</a></li>
+          <li><a href="https://abaqus-docs.mit.edu/2017/English/SIMACAECAERefMap/simacae-t-enghelpseamcrack.htm" target="_blank" rel="noopener">Creating a seam</a></li>
+          <li><a href="https://abaqus-docs.mit.edu/2017/English/SIMACAECAERefMap/simacae-c-engconccrackcrackdirection.htm" target="_blank" rel="noopener">Defining the crack extension direction</a></li>
+          <li><a href="https://abaqus-docs.mit.edu/2017/English/SIMACAECAERefMap/simacae-c-engconcxfemoverview.htm" target="_blank" rel="noopener">The extended finite element method (XFEM)</a></li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>Keywords, benchmarks and tutorials</h3>
+        <ul class="links">
+          <li><a href="https://abaqus-docs.mit.edu/2017/English/SIMACAEKEYRefMap/simakey-r-contourintegral.htm" target="_blank" rel="noopener">*CONTOUR INTEGRAL</a> keyword reference</li>
+          <li><a href="https://abaqus-docs.mit.edu/2017/English/SIMACAEKEYRefMap/simakey-r-enrichment.htm" target="_blank" rel="noopener">*ENRICHMENT</a> keyword reference (XFEM)</li>
+          <li><a href="https://abaqus-docs.mit.edu/2017/English/SIMACAEBMKRefMap/simabmk-c-jintegral2d.htm" target="_blank" rel="noopener">Benchmark: contour integral evaluation, 2D case</a></li>
+          <li><a href="https://abaqus-docs.mit.edu/2017/English/SIMACAEBMKRefMap/simabmk-c-jintegral3d.htm" target="_blank" rel="noopener">Benchmark: contour integral evaluation, 3D case</a></li>
+          <li><a href="https://simulation-blog.technia.com/blog/modelling-a-crack-using-abaqus" target="_blank" rel="noopener">TECHNIA blog: Modelling a crack using Abaqus</a> (CAE walkthrough with a swept spider web)</li>
+          <li><a href="https://imechanica.org/files/Industrial-SIMULIA-Tech-Brief-04-Fracture-Mechanics-Study-Full.pdf" target="_blank" rel="noopener">SIMULIA technology brief: fracture mechanics study</a> (PDF)</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">The public copy is the 2017 release; menus and keywords are essentially unchanged in later versions, but check your own release's documentation for new options.</p>
+  </div>
+</section>
+
+<section class="refs" id="refs">
+  <h2>References</h2>
+  <ol>
+    <li id="ref1">R. D. Henshell, K. G. Shaw (1975). Crack tip finite elements are unnecessary. <i>International Journal for Numerical Methods in Engineering</i> 9, 495–507.</li>
+    <li id="ref2">R. S. Barsoum (1976). On the use of isoparametric finite elements in linear fracture mechanics. <i>International Journal for Numerical Methods in Engineering</i> 10, 25–37.</li>
+    <li id="ref3">R. S. Barsoum (1977). Triangular quarter-point elements as elastic and perfectly-plastic crack tip elements. <i>International Journal for Numerical Methods in Engineering</i> 11, 85–98.</li>
+    <li id="ref4">C. F. Shih, H. G. de Lorenzi, M. D. German (1976). Crack extension modeling with singular quadratic isoparametric elements. <i>International Journal of Fracture</i> 12, 647–651.</li>
+    <li id="ref5">E. F. Rybicki, M. F. Kanninen (1977). A finite element calculation of stress intensity factors by a modified crack closure integral. <i>Engineering Fracture Mechanics</i> 9, 931–938.</li>
+    <li id="ref6">F. Z. Li, C. F. Shih, A. Needleman (1985). A comparison of methods for calculating energy release rates. <i>Engineering Fracture Mechanics</i> 21, 405–421.</li>
+    <li id="ref7">C. F. Shih, B. Moran, T. Nakamura (1986). Energy release rate along a three-dimensional crack front in a thermally stressed body. <i>International Journal of Fracture</i> 30, 79–102.</li>
+    <li id="ref8">J. F. Yau, S. S. Wang, H. T. Corten (1980). A mixed-mode crack analysis of isotropic solids using conservation laws of elasticity. <i>Journal of Applied Mechanics</i> 47, 335–341.</li>
+    <li id="ref9">N. Moës, J. Dolbow, T. Belytschko (1999). A finite element method for crack growth without remeshing. <i>International Journal for Numerical Methods in Engineering</i> 46, 131–150.</li>
+    <li id="ref10">J. R. Rice (1968). A path independent integral and the approximate analysis of strain concentration by notches and cracks. <i>Journal of Applied Mechanics</i> 35, 379–386.</li>
+    <li id="ref11">T. L. Anderson (2017). <i>Fracture Mechanics: Fundamentals and Applications</i>, 4th ed., Chapter 12, Computational fracture mechanics. CRC Press, Boca Raton.</li>
+    <li id="ref12">M. L. Williams (1957). On the stress distribution at the base of a stationary crack. <i>Journal of Applied Mechanics</i> 24, 109–114.</li>
+    <li id="ref13">G. R. Irwin (1957). Analysis of stresses and strains near the end of a crack traversing a plate. <i>Journal of Applied Mechanics</i> 24, 361–364.</li>
+    <li id="ref14">R. Krueger (2004). Virtual crack closure technique: history, approach, and applications. <i>Applied Mechanics Reviews</i> 57, 109–143.</li>
+    <li id="ref15">S. K. Chan, I. S. Tuba, W. K. Wilson (1970). On the finite element method in linear fracture mechanics. <i>Engineering Fracture Mechanics</i> 2, 1–17.</li>
+    <li id="ref16">R. M. McMeeking (1977). Finite deformation analysis of crack-tip opening in elastic–plastic materials and implications for fracture. <i>Journal of the Mechanics and Physics of Solids</i> 25, 357–381.</li>
+    <li id="ref17">Dassault Systèmes. <i>Abaqus Analysis User's Guide</i>: Contour integral evaluation; Fracture mechanics. SIMULIA documentation.</li>
+    <li id="ref18">Ansys Inc. <i>Mechanical APDL Fracture Analysis Guide</i> (KSCON, CINT, KCALC). Ansys documentation.</li>
+    <li id="ref19">Dassault Systèmes (2017). <i>Abaqus/CAE User's Guide</i>, Performing a contour integral analysis. <a href='https://abaqus-docs.mit.edu/2017/English/SIMACAECAERefMap/simacae-c-engconccrackoverview.htm' target='_blank' rel='noopener'>online copy</a>.</li>
+    <li id="ref20">Dassault Systèmes (2017). <i>Abaqus/CAE User's Guide</i>, Controlling the singularity at the crack tip. <a href='https://abaqus-docs.mit.edu/2017/English/SIMACAECAERefMap/simacae-t-enghelpcrackcracksingularity.htm' target='_blank' rel='noopener'>online copy</a>.</li>
+    <li id="ref21">Dassault Systèmes (2017). <i>Abaqus/CAE User's Guide</i>, Creating a contour integral crack. <a href='https://abaqus-docs.mit.edu/2017/English/SIMACAECAERefMap/simacae-t-enghelpcrack.htm' target='_blank' rel='noopener'>online copy</a>.</li>
+    <li id="ref22">Dassault Systèmes (2017). <i>Abaqus/CAE User's Guide</i>, Creating a seam. <a href='https://abaqus-docs.mit.edu/2017/English/SIMACAECAERefMap/simacae-t-enghelpseamcrack.htm' target='_blank' rel='noopener'>online copy</a>.</li>
+    <li id="ref23">Dassault Systèmes (2017). <i>Abaqus Keywords Reference Guide</i>, *CONTOUR INTEGRAL. <a href='https://abaqus-docs.mit.edu/2017/English/SIMACAEKEYRefMap/simakey-r-contourintegral.htm' target='_blank' rel='noopener'>online copy</a>.</li>
+    <li id="ref24">Dassault Systèmes (2017). <i>Abaqus/CAE User's Guide</i>, The extended finite element method (XFEM). <a href='https://abaqus-docs.mit.edu/2017/English/SIMACAECAERefMap/simacae-c-engconcxfemoverview.htm' target='_blank' rel='noopener'>online copy</a>.</li>
+    <li id="ref25">TECHNIA. Modelling a crack using Abaqus (blog tutorial). <a href='https://simulation-blog.technia.com/blog/modelling-a-crack-using-abaqus' target='_blank' rel='noopener'>simulation-blog.technia.com</a>.</li>
+    <li id="ref26">Dassault Systèmes (2017). <i>Abaqus Benchmarks Guide</i>, Contour integral evaluation: three-dimensional case. <a href='https://abaqus-docs.mit.edu/2017/English/SIMACAEBMKRefMap/simabmk-c-jintegral3d.htm' target='_blank' rel='noopener'>online copy</a>.</li>
+  </ol>
+  <p class="note">Equation numbers are local to this page. Software command names refer to the current vendor documentation.</p>
+</section>
+<footer>Section 3 runs a 2D plane-strain Q8 finite element model (banded Cholesky solver, 3×3 Gauss integration) in the page. With the default mesh (8 rings, 8 sectors, quarter-point tip elements) it returns K within 0.2% by displacement extrapolation and J on the outer contours within 0.05% of K²/E′.</footer>
+</div>
+
+<script>
+(() => {
+const R = document.documentElement;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MONO = '"IBM Plex Mono", ui-monospace, Menlo, monospace';
+const SERIF = 'Spectral, Georgia, serif';
+const C = {};
+let LUTP, LUTN;
+const hex = h => { h = h.replace('#',''); if (h.length===3) h = [...h].map(c=>c+c).join(''); return [0,2,4].map(i=>parseInt(h.substr(i,2),16)); };
+function ramp(stops, n){ const o=new Uint8ClampedArray(n*3);
+  for(let i=0;i<n;i++){ const t=i/(n-1)*(stops.length-1), k=Math.min(stops.length-2,Math.floor(t)), f=t-k;
+    for(let c=0;c<3;c++) o[i*3+c]=stops[k][c]+(stops[k+1][c]-stops[k][c])*f; } return o; }
+function readTheme(){ const s=getComputedStyle(R);
+  ['bg','surface','ink','muted','rule','accent','hot','plate','cool','heat1','heat2','heat3'].forEach(k=>C[k]=s.getPropertyValue('--'+k).trim());
+  LUTP = ramp([C.plate,C.heat1,C.heat2,C.heat3].map(hex),256);
+  LUTN = ramp([C.plate,C.cool].map(hex),256);
+  scenes.forEach(s=>s.cv && (s.cv.dirty=true));
+}
+const scenes = [];
+// rainbow (jet) scale: blue = minimum, red = maximum
+const LUTR = ramp([[0,0,143],[0,0,255],[0,255,255],[255,255,0],[255,0,0],[128,0,0]],256);
+function paintT(data,p,t){ const i=Math.round(clamp(t,0,1)*255)*3; data[p]=LUTR[i]; data[p+1]=LUTR[i+1]; data[p+2]=LUTR[i+2]; data[p+3]=255; }
+// signed value s in [-1,1] -> rgb into data at index p
+function paint(data,p,s){ const lut = s>=0?LUTP:LUTN; const i = Math.min(255, Math.round(Math.abs(s)*255))*3;
+  data[p]=lut[i]; data[p+1]=lut[i+1]; data[p+2]=lut[i+2]; data[p+3]=255; }
+
+function makeCanvas(el){ const ctx=el.getContext('2d'); const o={el,ctx,w:0,h:0,dirty:true};
+  const fit=()=>{ const w=el.clientWidth, h=el.clientHeight, d=Math.min(2,window.devicePixelRatio||1);
+    if(!w||!h) return; el.width=Math.round(w*d); el.height=Math.round(h*d); o.w=w; o.h=h; ctx.setTransform(d,0,0,d,0,0); o.dirty=true; };
+  new ResizeObserver(fit).observe(el); fit(); return o; }
+
+const ease = t => t<0?0:t>1?1:t*t*(3-2*t);
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const fmt = (v,d=1) => (Math.abs(v)>=1e4? v.toExponential(2) : v.toFixed(d));
+function niceTicks(min,max,n){ const step0=(max-min)/n, mag=Math.pow(10,Math.floor(Math.log10(step0))), f=step0/mag;
+  const step=(f<1.5?1:f<3?2:f<7?5:10)*mag, out=[]; for(let v=Math.ceil(min/step-1e-9)*step; v<=max+1e-9; v+=step) out.push(+v.toFixed(10)); return out; }
+function axes(ctx,b,xd,yd,o={}){
+  const X=v=>b.x+(v-xd[0])/(xd[1]-xd[0])*b.w, Y=v=>b.y+b.h-(v-yd[0])/(yd[1]-yd[0])*b.h;
+  ctx.save(); ctx.lineWidth=1; ctx.font='11px '+MONO; ctx.fillStyle=C.muted;
+  const xt=o.xt||niceTicks(xd[0],xd[1],o.nx||5), yt=o.yt||niceTicks(yd[0],yd[1],o.ny||4);
+  ctx.strokeStyle=C.rule; ctx.globalAlpha=.7;
+  xt.forEach(v=>{ctx.beginPath();ctx.moveTo(X(v)+.5,b.y);ctx.lineTo(X(v)+.5,b.y+b.h);ctx.stroke();});
+  yt.forEach(v=>{ctx.beginPath();ctx.moveTo(b.x,Y(v)+.5);ctx.lineTo(b.x+b.w,Y(v)+.5);ctx.stroke();});
+  ctx.globalAlpha=1; ctx.strokeStyle=C.muted; ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(b.x,b.y+b.h); ctx.lineTo(b.x+b.w,b.y+b.h); ctx.stroke();
+  ctx.textAlign='center'; ctx.textBaseline='top'; xt.forEach(v=>ctx.fillText(o.xf?o.xf(v):String(v),X(v),b.y+b.h+4));
+  ctx.textAlign='right'; ctx.textBaseline='middle'; yt.forEach(v=>ctx.fillText(o.yf?o.yf(v):String(v),b.x-5,Y(v)));
+  if(o.xl){ctx.textAlign='right';ctx.textBaseline='top';ctx.fillText(o.xl,b.x+b.w,b.y+b.h+18);}
+  if(o.yl){ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText(o.yl,b.x+2,b.y-5);}
+  ctx.restore(); return {X,Y};
+}
+function arrow(ctx,x1,y1,x2,y2,hs=5){ const a=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-hs*Math.cos(a-.45),y2-hs*Math.sin(a-.45));ctx.lineTo(x2-hs*Math.cos(a+.45),y2-hs*Math.sin(a+.45));ctx.closePath();ctx.fill(); }
+function label(ctx,txt,x,y,o={}){ ctx.save(); ctx.font=(o.size||12)+'px '+(o.font||MONO); ctx.textAlign=o.align||'left'; ctx.textBaseline=o.base||'middle';
+  if(o.bg){ const m=ctx.measureText(txt), w=m.width+10, h=(o.size||12)+8; let bx=x-(ctx.textAlign==='center'?w/2:ctx.textAlign==='right'?w-5:5);
+    ctx.fillStyle=C.surface; ctx.globalAlpha=.9; ctx.fillRect(bx,y-h/2,w,h); ctx.globalAlpha=1; }
+  ctx.fillStyle=o.color||C.ink; ctx.fillText(txt,x,y); ctx.restore(); }
+function playBtn(btn,s){ const set=()=>btn.textContent=s.playing?'Pause':'Play'; btn.onclick=()=>{s.playing=!s.playing;s.forcePlay=true;set();}; set(); s.syncBtn=set; }
+
+/* ---------- spider-web Q8 crack-tip model (upper half, mode I, boundary-layer loading) ---------- */
+// units: mm, MPa; K given in MPa√m
+function feSolve(o){
+  const {Nr,Ns,g,m,R,K,E,nu}=o, Kmm=K*Math.sqrt(1000), mu=E/(2*(1+nu)), kap=3-4*nu, Ep=E/(1-nu*nu);
+  const rr=[]; for(let i=0;i<=Nr;i++) rr.push(R*Math.pow(i/Nr,g));
+  const rad=a=>a%2===0?rr[a/2]:(a===1?m*rr[1]:(rr[(a-1)/2]+rr[(a+1)/2])/2);
+  // node numbering: a = radial half-step 0..2Nr, b = angular half-step 0..2Ns; skip odd/odd; a=0 is the single tip node
+  const nb=2*Ns+1, id=[], X=[], Y=[], A=[], Bn=[];
+  let n=0; id[0]=[]; for(let b=0;b<nb;b++) id[0][b]=0; X.push(0); Y.push(0); A.push(0); Bn.push(0); n=1;
+  for(let a=1;a<=2*Nr;a++){ id[a]=[]; for(let b=0;b<nb;b++){ if(a%2===1&&b%2===1){id[a][b]=-1;continue;}
+    const r=rad(a), t=Math.PI*b/(2*Ns), cs=(b%2===1&&o.straight)?Math.cos(Math.PI/(2*Ns)):1; id[a][b]=n++; X.push(r*cs*Math.cos(t)); Y.push(r*cs*Math.sin(t)); A.push(a); Bn.push(b); } }
+  const els=[];
+  for(let i=0;i<Nr;i++)for(let j=0;j<Ns;j++){ const a0=2*i,a1=2*i+1,a2=2*i+2,b0=2*j,b1=2*j+1,b2=2*j+2;
+    els.push({ring:i,sec:j,nd:[id[a0][b0],id[a2][b0],id[a2][b2],id[a0][b2],id[a1][b0],id[a2][b1],id[a1][b2],id[a0][b1]]}); }
+  // exact Williams mode I displacement
+  const exact=(x,y)=>{ const r=Math.hypot(x,y), t=Math.atan2(y,x), c=Math.cos(t/2), s=Math.sin(t/2), f=Kmm/(2*mu)*Math.sqrt(r/(2*Math.PI));
+    return [f*c*(kap-1+2*s*s), f*s*(kap+1-2*c*c)]; };
+  // boundary conditions
+  const nd=2*n, pres=new Uint8Array(nd), up=new Float64Array(nd);
+  for(let b=0;b<nb;b++){ const k=id[2*Nr][b]; const u=exact(X[k],Y[k]); pres[2*k]=1; pres[2*k+1]=1; up[2*k]=u[0]; up[2*k+1]=u[1]; }
+  for(let a=0;a<=2*Nr;a++){ const k=id[a][0]; pres[2*k+1]=1; up[2*k+1]=0; }      // symmetry on the ligament
+  const eq=new Int32Array(nd); let ne=0; for(let d=0;d<nd;d++) eq[d]=pres[d]?-1:ne++;
+  // bandwidth
+  let bw=0; els.forEach(e=>{ const q=[]; e.nd.forEach(k=>{ if(eq[2*k]>=0) q.push(eq[2*k]); if(eq[2*k+1]>=0) q.push(eq[2*k+1]); });
+    bw=Math.max(bw,Math.max(...q)-Math.min(...q)); });
+  const W=bw+1, Kb=new Float64Array(ne*W), F=new Float64Array(ne);
+  const c0=E/((1+nu)*(1-2*nu)), D=[[c0*(1-nu),c0*nu,0],[c0*nu,c0*(1-nu),0],[0,0,c0*(1-2*nu)/2]];
+  const gp=[-Math.sqrt(.6),0,Math.sqrt(.6)], gw=[5/9,8/9,5/9];
+  const XI=[-1,1,1,-1,0,1,0,-1], ET=[-1,-1,1,1,-1,0,1,0];
+  function shape(xi,et){ const N=new Float64Array(8), dx=new Float64Array(8), de=new Float64Array(8);
+    for(let i=0;i<8;i++){ const a=XI[i], b=ET[i];
+      if(i<4){ N[i]=.25*(1+xi*a)*(1+et*b)*(xi*a+et*b-1); dx[i]=.25*a*(1+et*b)*(2*xi*a+et*b); de[i]=.25*b*(1+xi*a)*(xi*a+2*et*b); }
+      else if(a===0){ N[i]=.5*(1-xi*xi)*(1+et*b); dx[i]=-xi*(1+et*b); de[i]=.5*b*(1-xi*xi); }
+      else { N[i]=.5*(1+xi*a)*(1-et*et); dx[i]=.5*a*(1-et*et); de[i]=-et*(1+xi*a); } }
+    return {N,dx,de}; }
+  function bmat(e,xi,et){ const s=shape(xi,et); let j11=0,j12=0,j21=0,j22=0;
+    for(let i=0;i<8;i++){ const k=e.nd[i]; j11+=s.dx[i]*X[k]; j12+=s.dx[i]*Y[k]; j21+=s.de[i]*X[k]; j22+=s.de[i]*Y[k]; }
+    const dj=j11*j22-j12*j21, Nx=new Float64Array(8), Ny=new Float64Array(8);
+    for(let i=0;i<8;i++){ Nx[i]=( j22*s.dx[i]-j12*s.de[i])/dj; Ny[i]=(-j21*s.dx[i]+j11*s.de[i])/dj; }
+    let x=0,y=0; for(let i=0;i<8;i++){ x+=s.N[i]*X[e.nd[i]]; y+=s.N[i]*Y[e.nd[i]]; }
+    return {N:s.N,Nx,Ny,dj,x,y}; }
+  // tip element: the three tip "nodes" are the same node, so merge their dofs
+  for(const e of els){ const ke=new Float64Array(256);
+    for(let p=0;p<3;p++)for(let qq=0;qq<3;qq++){ const b=bmat(e,gp[p],gp[qq]), w=gw[p]*gw[qq]*b.dj;
+      for(let i=0;i<8;i++)for(let j=0;j<8;j++){ const ax=b.Nx[i],ay=b.Ny[i],bx=b.Nx[j],by=b.Ny[j];
+        // B_i^T D B_j for plane strain
+        ke[(2*i)*16+2*j]  +=w*(ax*D[0][0]*bx+ay*D[2][2]*by);
+        ke[(2*i)*16+2*j+1]+=w*(ax*D[0][1]*by+ay*D[2][2]*bx);
+        ke[(2*i+1)*16+2*j]+=w*(ay*D[1][0]*bx+ax*D[2][2]*by);
+        ke[(2*i+1)*16+2*j+1]+=w*(ay*D[1][1]*by+ax*D[2][2]*bx); } }
+    const dof=[]; e.nd.forEach(k=>{dof.push(2*k,2*k+1);});
+    for(let i=0;i<16;i++){ const ei=eq[dof[i]]; if(ei<0) continue;
+      for(let j=0;j<16;j++){ const ej=eq[dof[j]], v=ke[i*16+j];
+        if(ej<0) F[ei]-=v*up[dof[j]]; else if(ej>=ei) Kb[ei*W+(ej-ei)]+=v; } } }
+
+  // banded Cholesky (upper band storage: Kb[i*W + (j-i)], j>=i)
+  for(let i=0;i<ne;i++){ let s=Kb[i*W]; const lo=Math.max(0,i-bw);
+    for(let k=lo;k<i;k++){ const l=Kb[k*W+(i-k)]; s-=l*l; } const dii=Math.sqrt(s); Kb[i*W]=dii;
+    for(let j=i+1;j<=Math.min(ne-1,i+bw);j++){ let t=Kb[i*W+(j-i)]; const lo2=Math.max(0,j-bw);
+      for(let k=Math.max(lo,lo2);k<i;k++) t-=Kb[k*W+(i-k)]*Kb[k*W+(j-k)]; Kb[i*W+(j-i)]=t/dii; } }
+  const z=new Float64Array(ne);
+  for(let i=0;i<ne;i++){ let s=F[i]; for(let k=Math.max(0,i-bw);k<i;k++) s-=Kb[k*W+(i-k)]*z[k]; z[i]=s/Kb[i*W]; }
+  for(let i=ne-1;i>=0;i--){ let s=z[i]; for(let k=i+1;k<=Math.min(ne-1,i+bw);k++) s-=Kb[i*W+(k-i)]*z[k]; z[i]=s/Kb[i*W]; }
+  const U=new Float64Array(nd); for(let d=0;d<nd;d++) U[d]=eq[d]<0?up[d]:z[eq[d]];
+  // Gauss-point stresses
+  const gpts=[];
+  for(const e of els){ e.g=[]; for(let p=0;p<3;p++)for(let qq=0;qq<3;qq++){ const b=bmat(e,gp[p],gp[qq]); let ux=0,uy=0,vx=0,vy=0;
+      for(let i=0;i<8;i++){ const k=e.nd[i]; ux+=b.Nx[i]*U[2*k]; uy+=b.Ny[i]*U[2*k]; vx+=b.Nx[i]*U[2*k+1]; vy+=b.Ny[i]*U[2*k+1]; }
+      const sx=D[0][0]*ux+D[0][1]*vy, sy=D[1][0]*ux+D[1][1]*vy, txy=D[2][2]*(uy+vx);
+      const G={x:b.x,y:b.y,w:gw[p]*gw[qq]*b.dj,sx,sy,txy,ux,uy,vx,vy,N:b.N,Nx:b.Nx,Ny:b.Ny}; e.g.push(G); gpts.push(G); } }
+  // displacement extrapolation along the crack face (b = 2Ns), plane strain
+  const face=[]; for(let a=1;a<=2*Nr;a++){ const k=id[a][2*Ns], r=Math.hypot(X[k],Y[k]); face.push({r,K:2*mu*U[2*k+1]*Math.sqrt(2*Math.PI/r)/(kap+1)/Math.sqrt(1000)}); }
+  const Kext=face[0].K-(face[1].K-face[0].K)/(face[1].r-face[0].r)*face[0].r;
+  // domain J, one ring at a time: q = 1 on the inner edge, 0 on the outer edge, 1/2 on radial mid-side nodes
+  const qn=[1,0,0,1,.5,0,.5,1], Jr=[];
+  for(let i=0;i<Nr;i++){ let J=0; for(const e of els){ if(e.ring!==i) continue;
+      for(const G of e.g){ let qx=0,qy=0; for(let k=0;k<8;k++){ qx+=G.Nx[k]*qn[k]; qy+=G.Ny[k]*qn[k]; }
+        const ex=G.ux, ey=G.vy, gxy=G.uy+G.vx, Wd=.5*(G.sx*ex+G.sy*ey+G.txy*gxy);
+        // (σ_ij u_i,1 − W δ_1j) q,j
+        J+=((G.sx*G.ux+G.txy*G.vx-Wd)*qx+(G.txy*G.ux+G.sy*G.vx)*qy)*G.w; } }
+    Jr.push(2*J); }                                    // both halves, N/mm = kJ/m²
+  return {X,Y,id,els,U,face,Kext,Jr,Jex:K*K/Ep*1e3,rr,n,ne,bw,gpts,Kmm};
+}
+if(typeof module!=='undefined') module.exports=feSolve;
+
+/* ---------- Section 2: one element side with a moving mid-side node ---------- */
+{
+  const s={cv:makeCanvas(document.getElementById('ec')),t:0,playing:false,visible:false};
+  scenes.push(s);
+  const sl=document.getElementById('em'), o=document.getElementById('emo'), el=id=>document.getElementById(id);
+  const sync=()=>document.querySelectorAll('[data-em]').forEach(b=>b.setAttribute('aria-pressed',Math.abs(+b.dataset.em-+sl.value)<1e-9));
+  sl.addEventListener('input',sync);
+  document.querySelectorAll('[data-em]').forEach(b=>b.addEventListener('click',()=>{ sl.value=b.dataset.em; sync(); }));
+  s.draw=()=>{ const {ctx,w,h}=s.cv; if(!w) return; const m=+sl.value; o.textContent=m.toFixed(3);
+    // nodes at 0, mL, L (L = 1); nodal u = exact √x
+    const xs=xi=>m*(1-xi*xi)+xi*(xi+1)/2, dxs=xi=>-2*m*xi+xi+.5;
+    const us=xi=>Math.sqrt(m)*(1-xi*xi)+xi*(xi+1)/2, dus=xi=>-2*Math.sqrt(m)*xi+xi+.5;
+    const jt=dxs(-1); el('eoj').textContent=(jt).toFixed(3)+' L'+(jt<-1e-9?' (negative!)':jt<1e-9?' = 0 (singular)':'');
+    const bad=m<0.25-1e-9;
+    el('eos').textContent=bad?'infinite inside the element':jt<1e-9?'infinite, ∝ 1/√x':'finite: '+(dus(-1)/jt/0.5).toFixed(2)+' (in units of 1/(2√L))';
+    // error at x = 0.01 L: solve x(ξ) = 0.01
+    let lo=-1, hi=1; for(let k=0;k<60;k++){ const mid=(lo+hi)/2; (xs(mid)<0.01)?lo=mid:hi=mid; }
+    const xi1=(lo+hi)/2, e1=(dus(xi1)/dxs(xi1))/(0.5/Math.sqrt(0.01))-1;
+    el('eoe').textContent=bad?'—':(e1*100).toFixed(1)+' %';
+    ctx.clearRect(0,0,w,h); ctx.fillStyle=C.surface; ctx.fillRect(0,0,w,h);
+    // element sketch
+    const ex=40, ew=w-80, ey=34;
+    ctx.strokeStyle=C.ink; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(ex+ew,ey); ctx.stroke();
+    [[0,C.hot,'tip, x = 0'],[m,bad?C.hot:C.accent,'x = '+m.toFixed(2)+' L'],[1,C.ink,'x = L']].forEach(([x,c,t],i)=>{ ctx.fillStyle=c; ctx.beginPath(); ctx.arc(ex+x*ew,ey,i===1?6:5,0,7); ctx.fill();
+      label(ctx,t,ex+x*ew,ey+(i===1?-16:16),{align:i===0?'left':i===2?'right':'center',size:11,color:C.muted}); });
+    // log-log strain plot
+    const b={x:56,y:84,w:w-180,h:h-128};
+    const sup=v=>'10'+({'-3':'⁻³','-2':'⁻²','-1':'⁻¹','0':'⁰','1':'¹','2':'²'}[v]);
+    const M=axes(ctx,b,[-3,0],[-.5,2],{xt:[-3,-2,-1,0],yt:[0,1,2],xf:sup,yf:sup,xl:'x / L',yl:'strain ε · 2√L'});
+    ctx.setLineDash([5,4]); ctx.strokeStyle=C.muted; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(M.X(-3),M.Y(1.5)); ctx.lineTo(M.X(0),M.Y(0)); ctx.stroke(); ctx.setLineDash([]);
+    label(ctx,'exact 1/√x',M.X(-2.6),M.Y(1.3)-12,{size:11,color:C.muted,bg:true});
+    ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
+    ctx.strokeStyle=bad?C.hot:C.accent; ctx.lineWidth=2.4; ctx.beginPath(); let first=true;
+    for(let k=0;k<=400;k++){ const xi=-1+2*k/400, x=xs(xi), d=dxs(xi), e=dus(xi)/d*2; if(x<=1e-3||!(e>0)||d<=0){ first=true; continue; }
+      const P=[M.X(Math.log10(x)),M.Y(Math.log10(e))]; first?ctx.moveTo(...P):ctx.lineTo(...P); first=false; } ctx.stroke(); ctx.restore();
+    label(ctx,bad?'Jacobian < 0: mapping folds over':jt<1e-9?'element strain = exact':'element strain levels off',b.x+b.w-4,b.y+10,{align:'right',size:11,color:bad?C.hot:C.accent,bg:true});
+    label(ctx,'FE strain',b.x+b.w+10,b.y+b.h*.5,{size:11,color:bad?C.hot:C.accent});
+    label(ctx,'(nodal u = √x)',b.x+b.w+10,b.y+b.h*.5+15,{size:10,color:C.muted});
+  };
+}
+
+/* ---------- Section 3: live spider-web FE model ---------- */
+{
+  const s={cv:makeCanvas(document.getElementById('fm')),t:0,playing:false,visible:false};
+  const kc=makeCanvas(document.getElementById('fk')); scenes.push(s);
+  const el=id=>document.getElementById(id), st={m:0.25,straight:true};
+  const sl={Nr:el('fNr'),Ns:el('fNs'),g:el('fg'),J:el('fJ')}, col=el('fcol'), view=el('fview');
+  const R=10, K=50, E=200e3, nu=0.3, Ep=E/(1-nu*nu);
+  const syncOut=()=>{ el('fNro').textContent=sl.Nr.value; el('fNso').textContent=sl.Ns.value+' ('+(180/sl.Ns.value).toFixed(1)+'° each)';
+    el('fgo').textContent=(+sl.g.value).toFixed(1); sl.J.max=sl.Nr.value; if(+sl.J.value>+sl.Nr.value) sl.J.value=sl.Nr.value; el('fJo').textContent=sl.J.value; };
+  Object.values(sl).forEach(i=>i.addEventListener('input',syncOut)); syncOut();
+  document.querySelectorAll('[data-fe]').forEach(b=>b.addEventListener('click',()=>{ st.m=+b.dataset.fe; document.querySelectorAll('[data-fe]').forEach(o=>o.setAttribute('aria-pressed',o===b)); }));
+  document.querySelectorAll('[data-fs]').forEach(b=>b.addEventListener('click',()=>{ st.straight=b.dataset.fs==='1'; document.querySelectorAll('[data-fs]').forEach(o=>o.setAttribute('aria-pressed',o===b)); }));
+  let res=null, key='';
+  const cbs=document.querySelectorAll('#fmb span');
+  function solve(){ const k=[sl.Nr.value,sl.Ns.value,sl.g.value,st.m,st.straight].join('|'); if(k===key) return res; key=k;
+    res=feSolve({Nr:+sl.Nr.value,Ns:+sl.Ns.value,g:+sl.g.value,m:st.m,R,K,E,nu,straight:st.straight});
+    const Km=res.Kmm;
+    // element colour values from Gauss points
+    res.els.forEach(e=>{ let se=0, sv=0; e.g.forEach(G=>{ const r=Math.hypot(G.x,G.y), t=Math.atan2(G.y,G.x), k0=Km/Math.sqrt(2*Math.PI*r);
+        const ex=k0*Math.cos(t/2)*(1+Math.sin(t/2)*Math.sin(1.5*t)); se+=(G.sy-ex)/k0; sv+=G.sy; });
+      e.err=se/e.g.length; e.syy=sv/e.g.length; });
+    const nr=+sl.Nr.value, outer=res.Jr.slice(Math.min(2,nr-1)); res.Jout=outer.reduce((a,b)=>a+b,0)/outer.length;
+    const pct=(v,x)=>((v/x-1)*100>=0?'+':'')+((v/x-1)*100).toFixed(2)+'%';
+    el('fo0').textContent=res.els.length+' el. · '+res.ne+' DOF';
+    el('fo1').textContent=res.Kext.toFixed(2)+' MPa√m ('+pct(res.Kext,K)+')';
+    el('fo2').textContent=res.Jr[0].toFixed(3)+' kJ/m² ('+pct(res.Jr[0],res.Jex)+')';
+    el('fo3').textContent=res.Jout.toFixed(3)+' kJ/m² ('+pct(res.Jout,res.Jex)+')';
+    const KJ=Math.sqrt(res.Jout*1e-3*Ep); el('fo4').textContent=KJ.toFixed(2)+' MPa√m ('+pct(KJ,K)+')';
+    el('fo5').textContent='50 · '+res.Jex.toFixed(3);
+    return res; }
+  s.draw=()=>{ const {ctx,w,h}=s.cv; if(!w) return; const D=solve(), Z=+view.value, c=col.value, L=D.rr[1];
+    const Rv=R/Z, sc=Math.min(w*.47,h*.47)/Rv, cx=w*.5, cy=h*.5, P=(x,y)=>[cx+x*sc,cy-y*sc];
+    ctx.clearRect(0,0,w,h); ctx.fillStyle=C.surface; ctx.fillRect(0,0,w,h);
+    const bord=[0,4,1,5,2,6,3,7];
+    let lo, hi, val;
+    if(c==='err'){ lo=-0.1; hi=0.1; val=e=>e.err; cbs[0].textContent='σyy error, % of K/√(2πr)'; cbs[1].textContent='−10%'; cbs[2].textContent='+10%'; }
+    else if(c==='syy'){ hi=Math.log10(D.Kmm/Math.sqrt(2*Math.PI*L*.25)); lo=Math.log10(D.Kmm/Math.sqrt(2*Math.PI*R))-0.5; val=e=>Math.log10(Math.max(e.syy,1e-3));
+      cbs[0].textContent='σyy, MPa (log)'; cbs[1].textContent=Math.pow(10,lo).toFixed(0); cbs[2].textContent=Math.pow(10,hi).toFixed(0); }
+    else { cbs[0].textContent='mesh only'; cbs[1].textContent=''; cbs[2].textContent=''; }
+    const LUT=(t)=>{ const d=new Uint8ClampedArray(4); paintT(d,0,t); return 'rgb('+d[0]+','+d[1]+','+d[2]+')'; };
+    const pxL=L*sc, showNodes=pxL>18;
+    for(const sgn of [1,-1]){
+      for(const e of D.els){ ctx.beginPath(); bord.forEach((i,k)=>{ const n=e.nd[i]; const q=P(D.X[n],sgn*D.Y[n]); k?ctx.lineTo(...q):ctx.moveTo(...q); }); ctx.closePath();
+        ctx.fillStyle=c==='none'?C.plate:LUT((val(e)-lo)/(hi-lo)); ctx.fill();
+        ctx.strokeStyle=c==='none'?C.muted:'rgba(0,0,0,.45)'; ctx.lineWidth=.8; ctx.stroke(); }
+      // highlighted J domain
+      const jr=+sl.J.value-1; ctx.strokeStyle=c==='none'?C.accent:'#fff'; ctx.lineWidth=2.4;
+      for(const e of D.els){ if(e.ring!==jr) continue; ctx.beginPath(); bord.forEach((i,k)=>{ const n=e.nd[i]; const q=P(D.X[n],sgn*D.Y[n]); k?ctx.lineTo(...q):ctx.moveTo(...q); }); ctx.closePath(); ctx.stroke(); }
+      if(showNodes){ ctx.fillStyle=c==='none'?C.ink:'#111'; for(let k=1;k<D.n;k++){ const q=P(D.X[k],sgn*D.Y[k]); if(Math.abs(q[0]-cx)>w||Math.abs(q[1]-cy)>h) continue; ctx.fillRect(q[0]-1.5,q[1]-1.5,3,3); } }
+      // quarter-point (or mid) nodes of the tip ring
+      ctx.fillStyle=C.hot; ctx.strokeStyle='#fff'; ctx.lineWidth=1.2;
+      for(let b=0;b<=2*(+sl.Ns.value);b+=2){ const k=D.id[1][b], q=P(D.X[k],sgn*D.Y[k]); ctx.beginPath(); ctx.arc(q[0],q[1],Math.max(2.5,Math.min(5,pxL/10)),0,7); ctx.fill(); ctx.stroke(); }
+    }
+    // crack faces
+    ctx.strokeStyle=C.ink; ctx.lineWidth=2.4; ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(cx,cy); ctx.stroke();
+    ctx.fillStyle=C.ink; ctx.beginPath(); ctx.arc(cx,cy,3.5,0,7); ctx.fill();
+    label(ctx,'crack (free faces)',10,cy-12,{size:11,bg:true});
+    label(ctx,'J contour '+sl.J.value,w-10,16,{align:'right',size:11,bg:true});
+    label(ctx,(st.m===0.25?'quarter-point':'mid-side')+' nodes',w-10,36,{align:'right',size:11,color:C.hot,bg:true});
+    label(ctx,'view radius '+Rv.toFixed(Rv<1?2:1)+' mm, tip element L = '+L.toFixed(L<0.1?3:2)+' mm',10,h-14,{size:11,bg:true});
+    // ---- K_app and J charts
+    const c2=kc.ctx, W2=kc.w, H2=kc.h; if(!W2) return;
+    c2.clearRect(0,0,W2,H2); c2.fillStyle=C.surface; c2.fillRect(0,0,W2,H2);
+    const half=W2*.56, b1={x:46,y:22,w:half-64,h:H2-56}, b2={x:half+40,y:22,w:W2-half-56,h:H2-56};
+    const pts=D.face.filter(p=>p.r<=4.05*L); let ymin=Math.min(D.Kext,...pts.map(p=>p.K))-1, ymax=Math.max(K,...pts.map(p=>p.K))+1;
+    ymin=Math.floor(ymin); ymax=Math.ceil(ymax);
+    const M=axes(c2,b1,[0,4],[ymin,ymax],{xt:[0,1,2,3,4],xl:'r / L along the crack face',yl:'K_app, MPa√m',ny:4});
+    c2.setLineDash([5,4]); c2.strokeStyle=C.muted; c2.lineWidth=1.2; c2.beginPath(); c2.moveTo(b1.x,M.Y(K)); c2.lineTo(b1.x+b1.w,M.Y(K)); c2.stroke(); c2.setLineDash([]);
+    label(c2,'exact 50',b1.x+b1.w-4,M.Y(K)-9,{align:'right',size:10,color:C.muted,bg:true});
+    const p0=D.face[0], p1=D.face[1]; c2.strokeStyle=C.hot; c2.lineWidth=1.4; c2.beginPath(); c2.moveTo(M.X(0),M.Y(D.Kext)); c2.lineTo(M.X(p1.r/L),M.Y(p1.K)); c2.stroke();
+    c2.strokeStyle=C.accent; c2.lineWidth=2; c2.beginPath(); pts.forEach((p,i)=>i?c2.lineTo(M.X(p.r/L),M.Y(p.K)):c2.moveTo(M.X(p.r/L),M.Y(p.K))); c2.stroke();
+    c2.fillStyle=C.accent; pts.forEach(p=>{ c2.beginPath(); c2.arc(M.X(p.r/L),M.Y(p.K),3,0,7); c2.fill(); });
+    c2.fillStyle=C.hot; c2.beginPath(); c2.arc(M.X(0),M.Y(D.Kext),4.5,0,7); c2.fill();
+    label(c2,'extrapolated '+D.Kext.toFixed(1),M.X(0)+8,M.Y(D.Kext)+(D.Kext<K-1?10:-10),{size:10,color:C.hot,bg:true});
+    const nr=D.Jr.length, jmin=Math.min(D.Jex*.96,...D.Jr), jmax=Math.max(D.Jex*1.04,...D.Jr);
+    const M2=axes(c2,b2,[0.5,nr+.5],[jmin,jmax],{xt:Array.from({length:nr},(_,i)=>i+1),xl:'contour',yl:'J, kJ/m²',ny:4,yf:v=>v.toFixed(2)});
+    const bwid=Math.max(2,b2.w/nr*.6);
+    D.Jr.forEach((v,i)=>{ c2.fillStyle=i===+sl.J.value-1?C.hot:C.accent; const x=M2.X(i+1); c2.fillRect(x-bwid/2,M2.Y(v),bwid,b2.y+b2.h-M2.Y(v)); });
+    c2.setLineDash([5,4]); c2.strokeStyle=C.ink; c2.lineWidth=1.2; c2.beginPath(); c2.moveTo(b2.x,M2.Y(D.Jex)); c2.lineTo(b2.x+b2.w,M2.Y(D.Jex)); c2.stroke(); c2.setLineDash([]);
+    label(c2,'K²/E′ = '+D.Jex.toFixed(3),b2.x+b2.w-4,M2.Y(D.Jex)-9,{align:'right',size:10,bg:true});
+  };
+  [col,view].forEach(x=>x.addEventListener('change',()=>s.cv.dirty=true));
+}
+
+/* ---------- loop ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{const s=scenes.find(s=>s.cv.el===e.target); if(s) s.visible=e.isIntersecting;}),{threshold:0.05});
+scenes.forEach(s=>io.observe(s.cv.el));
+readTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',readTheme);
+new MutationObserver(readTheme).observe(R,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts) document.fonts.ready.then(()=>scenes.forEach(s=>s.draw&&s.draw()));
+let last=performance.now();
+function frame(now){ const dt=Math.min(0.05,(now-last)/1000); last=now;
+  scenes.forEach(s=>{ if(!s.visible||!s.cv.w) return; if(s.playing && (!reduce || s.forcePlay)) s.t+=dt; s.draw(); });
+  requestAnimationFrame(frame); }
+scenes.forEach(s=>s.draw&&s.cv.w&&s.draw());
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

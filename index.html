@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fracture Mechanics Companion</title>
+<meta name="description" content="Interactive MSc lecture companion on fracture mechanics: stress concentration, stress intensity factors, angular functions, the J-integral and finite element methods.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;1,500&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#edf0f3; --surface:#f9fafb; --ink:#152030; --muted:#566475; --rule:#cdd5de; --accent:#1d58b8; --hot:#d9561a;
+  --f-display:"Spectral", Georgia, "Times New Roman", serif;
+  --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542; --accent:#82abff; --hot:#ff8a3d; color-scheme:dark } }
+:root[data-theme="dark"]{ --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542; --accent:#82abff; --hot:#ff8a3d; color-scheme:dark }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:.9375rem;line-height:1.6;padding:0 16px 64px}
+.wrap{max-width:1180px;margin:0 auto}
+header{padding:40px 0 18px;display:grid;gap:12px}
+.eyebrow{font-family:var(--f-mono);font-size:.8125rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:600;font-size:clamp(2rem,5vw,3.2rem);line-height:1.05;margin:0;text-wrap:balance;max-width:20ch}
+h1 em{font-style:italic;color:var(--accent);font-weight:500}
+.lede{max-width:68ch;margin:0;color:var(--muted);font-size:1.0625rem}
+.hero{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--rule);background:#00008f}
+.hero canvas{display:block;width:100%;aspect-ratio:16/7}
+@media (max-width:640px){ .hero canvas{aspect-ratio:4/3} .hero .cap span:nth-child(n+3){display:none} }
+.hero .cap{position:absolute;left:12px;bottom:10px;right:12px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-family:var(--f-mono);font-size:.75rem;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.hero .cap span{background:rgba(0,0,0,.35);padding:2px 8px;border-radius:999px}
+.hero button{position:absolute;right:10px;top:10px;font:inherit;font-size:.8125rem;border-radius:6px;border:1px solid rgba(255,255,255,.5);background:rgba(0,0,0,.35);color:#fff;padding:5px 12px;cursor:pointer}
+.hero button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.legend{display:grid;grid-template-columns:auto minmax(80px,1fr) auto;gap:8px;align-items:center;font-family:var(--f-mono);font-size:.75rem;color:var(--muted);margin-top:8px}
+.legend i{height:10px;border-radius:2px;border:1px solid var(--rule);background:linear-gradient(to right,#00008f,#0000ff,#00ffff,#ffff00,#ff0000,#800000)}
+h2{font-family:var(--f-display);font-weight:600;font-size:1.5rem;margin:36px 0 14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:16px}
+.card{display:grid;grid-template-rows:auto 1fr;background:var(--surface);border:1px solid var(--rule);border-radius:8px;overflow:hidden;text-decoration:none;color:inherit;transition:transform .15s,border-color .15s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+@media (prefers-reduced-motion: reduce){ .card{transition:none} .card:hover{transform:none} }
+.card img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:var(--bg);border-bottom:1px solid var(--rule)}
+.card .body{padding:12px 14px 14px;display:grid;gap:6px;align-content:start}
+.card .n{font-family:var(--f-mono);font-size:.75rem;color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+.card h3{font-family:var(--f-display);font-weight:600;font-size:1.15rem;margin:0;line-height:1.25}
+.card p{margin:0;color:var(--muted);font-size:.875rem}
+.path{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-family:var(--f-mono);font-size:.8125rem;color:var(--muted)}
+.path a{color:var(--ink);text-decoration:none;border:1px solid var(--rule);background:var(--surface);padding:5px 10px;border-radius:999px}
+.path a:hover{border-color:var(--accent);color:var(--accent)}
+footer{margin-top:40px;border-top:1px solid var(--rule);padding-top:16px;color:var(--muted);font-size:.8125rem;max-width:90ch}
+footer a{color:var(--accent)}
+
+/* full-width introduction and author credit */
+header h1,header .lede{max-width:none}
+.credit{margin:0;font-size:.8125rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px}
+.credit b{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">MSc lecture companion · Fracture mechanics</div>
+  <h1>Fracture Mechanics Notes as taught to Arts et Metiers students</h1>
+  <p class="lede">Interactive pages that build fracture mechanics step by step: stress concentration, the crack-tip singularity and K, the angular functions, the J-integral for elastic–plastic materials, and how finite element software computes K and J. Every figure is computed live in the browser.</p>
+  <p class="credit"><b>Author:</b> Dr Régis Kubler, Arts et Métiers Institute of Technology. Developed with the assistance of Claude Opus 5.5 (Anthropic), October 2026. Code: MIT · Documentation: CC BY 4.0.</p>
+</header>
+
+<figure class="hero" style="margin:0">
+  <canvas id="hero" aria-label="Animated stress field around a growing centre crack, with the plastic zones and a J-integral contour around the tip"></canvas>
+  <button id="hp" type="button">Pause</button>
+  <div class="cap"><span id="ha">2a = —</span><span id="hk">K = —</span><span>white: plastic zone (σ<sub>vM</sub> ≥ σ<sub>Y</sub>)</span><span>dashed: J contour</span></div>
+</figure>
+<div class="legend"><span>von Mises stress: low</span><i></i><span>high</span></div>
+
+<h2>Suggested path</h2>
+<div class="path">
+  <a href="crack-tip-stress-intensity.html">1 · Stress intensity</a><span>→</span>
+  <a href="crack-tip-angular-functions.html">2 · Angular functions</a><span>→</span>
+  <a href="crack-tip-j-integral.html">3 · J-integral</a><span>→</span>
+  <a href="crack-tip-fe-fracture.html">4 · FE software</a><span>→</span>
+  <a href="notes/stress-intensity-notes.pdf">Notes (PDF)</a>
+</div>
+
+<h2>Pages</h2>
+<div class="cards">
+  <a class="card" href="crack-tip-stress-intensity.html"><img src="assets/thumb-stress-intensity.png" alt="" loading="lazy"><div class="body"><div class="n">Page 1 · LEFM</div><h3>Stress intensity at the crack tip</h3><p>K<sub>t</sub> for an elliptical hole and its sharp-crack limit, the 1/√r singularity, the Williams field, handbook K, K from FE data, the fracture check and small-scale yielding.</p></div></a>
+  <a class="card" href="crack-tip-angular-functions.html"><img src="assets/thumb-angular-functions.png" alt="" loading="lazy"><div class="body"><div class="n">Page 2 · Near-tip field</div><h3>Angular functions f<sub>ij</sub>(θ)</h3><p>Modes I, II and III, mixed-mode loading and the T-stress, for different geometries and loadings.</p></div></a>
+  <a class="card" href="crack-tip-j-integral.html"><img src="assets/thumb-j-integral.png" alt="" loading="lazy"><div class="body"><div class="n">Page 3 · EPFM</div><h3>The J-integral</h3><p>Definition term by term, a live contour integration, path independence, J = K²/E′, the HRR field, T-stress and constraint, and J from a bend test.</p></div></a>
+  <a class="card" href="crack-tip-fe-fracture.html"><img src="assets/thumb-fe-fracture.png" alt="" loading="lazy"><div class="body"><div class="n">Page 4 · Computation</div><h3>K and J in finite element software</h3><p>Quarter-point elements, a spider-web mesh solved live, extraction methods, collapsed-element variants and an Abaqus how-to with links.</p></div></a>
+  <a class="card" href="notes/stress-intensity-notes.pdf"><img src="assets/thumb-notes.png" alt="" loading="lazy"><div class="body"><div class="n">Lecture notes · PDF</div><h3>Equations and figures in LaTeX</h3><p>All equations and graphs of the pages with derivations and references. The LaTeX source and figure script are in the notes folder.</p></div></a>
+</div>
+
+<footer>The pages are self-contained HTML with no build step. They load Google Fonts and work offline with fallback fonts. Equation numbers and reference lists are local to each page.</footer>
+</div>
+
+<script>
+(() => {
+const cv=document.getElementById('hero'), ctx=cv.getContext('2d'), btn=document.getElementById('hp');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let playing=!reduce, t=reduce?4.2:0, last=performance.now(), visible=true, W=0, H=0;
+btn.textContent=playing?'Pause':'Play'; btn.onclick=()=>{ playing=!playing; btn.textContent=playing?'Pause':'Play'; };
+const fit=()=>{ const d=Math.min(2,devicePixelRatio||1); W=cv.clientWidth; H=cv.clientHeight; cv.width=Math.round(W*d); cv.height=Math.round(H*d); ctx.setTransform(d,0,0,d,0,0); };
+new ResizeObserver(fit).observe(cv); fit();
+new IntersectionObserver(e=>visible=e[0].isIntersecting).observe(cv);
+// rainbow: blue = low, red = high
+const stops=[[0,0,143],[0,0,255],[0,255,255],[255,255,0],[255,0,0],[128,0,0]];
+const LUT=new Uint8ClampedArray(256*3); for(let i=0;i<256;i++){ const u=i/255*5, k=Math.min(4,Math.floor(u)), f=u-k; for(let c=0;c<3;c++) LUT[i*3+c]=stops[k][c]+(stops[k+1][c]-stops[k][c])*f; }
+// complex helpers
+const mul=(a,b)=>[a[0]*b[0]-a[1]*b[1],a[0]*b[1]+a[1]*b[0]], div=(a,b)=>{ const d=b[0]*b[0]+b[1]*b[1]; return [(a[0]*b[0]+a[1]*b[1])/d,(a[1]*b[0]-a[0]*b[1])/d]; };
+function csqrt(z){ const r=Math.hypot(z[0],z[1]); let re=Math.sqrt((r+z[0])/2), im=Math.sqrt(Math.max(0,(r-z[0])/2)); if(z[1]<0) im=-im; return [re,im]; }
+const GW=240, GH=105, off=document.createElement('canvas'); off.width=GW; off.height=GH; const oc=off.getContext('2d'), img=oc.createImageData(GW,GH);
+const XR=4, sig=1, sY=1.75;    // domain x in [-4,4] (units of 2a_max/2), remote stress 1, yield 2.6
+function field(a,YR){ for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){ const x=-XR+(i+.5)/GW*2*XR, y=YR-(j+.5)/GH*2*YR, p=(j*GW+i)*4;
+    // Westergaard centre crack, uniaxial tension normal to the crack: Z = σ z/√(z²−a²) (minus σ/2 for the σxx far field)
+    const z=[x,Math.abs(y)<1e-6?1e-6:y], z2a=[z[0]*z[0]-z[1]*z[1]-a*a,2*z[0]*z[1]];
+    let s=csqrt(z2a); if(s[0]*x<0||(Math.abs(x)<1e-9&&s[1]*y<0)) s=[-s[0],-s[1]];        // branch: s ~ z far away
+    const Z=div([sig*z[0],sig*z[1]],s), Zp=div([-sig*a*a,0],mul(s,z2a)), yy=z[1];
+    const sxx=Z[0]-yy*Zp[1]-sig, syy=Z[0]+yy*Zp[1], txy=-yy*Zp[0];
+    const vm=Math.sqrt(sxx*sxx-sxx*syy+syy*syy+3*txy*txy);
+    if(Math.abs(y)<YR/GH&&Math.abs(x)<a){ img.data[p]=245;img.data[p+1]=247;img.data[p+2]=250;img.data[p+3]=255; continue; }
+    if(vm>=sY){ img.data[p]=255;img.data[p+1]=255;img.data[p+2]=255;img.data[p+3]=255; continue; }
+    const k=Math.round(Math.min(1,Math.pow(vm/sY,1.3))*255)*3; img.data[p]=LUT[k];img.data[p+1]=LUT[k+1];img.data[p+2]=LUT[k+2];img.data[p+3]=255; }
+  oc.putImageData(img,0,0); }
+const ha=document.getElementById('ha'), hk=document.getElementById('hk');
+const ease=u=>u<0?0:u>1?1:u*u*(3-2*u);
+function draw(){ if(!W) return;
+  const T=12, p=(t%T)/T, u=p<.7?ease(p/.7):1-ease((p-.7)/.3), a=0.4+1.2*u;   // crack half-length grows, then resets
+  const YR=XR*H/W; field(a,YR);
+  ctx.imageSmoothingEnabled=true; ctx.drawImage(off,0,0,W,H);
+  const X=x=>(x+XR)/(2*XR)*W, Y=y=>(YR-y)/(2*YR)*H, s=W/(2*XR);
+  // crack
+  ctx.strokeStyle='#111'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(X(-a),Y(0)); ctx.lineTo(X(a),Y(0)); ctx.stroke();
+  // remote load arrows
+  ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.fillStyle='rgba(255,255,255,.85)'; ctx.lineWidth=1.5;
+  const n=Math.max(8,Math.round(W/60)); for(let k=0;k<n;k++){ const x=(k+.5)/n*W; 
+    ctx.beginPath(); ctx.moveTo(x,16); ctx.lineTo(x,4); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x,2); ctx.lineTo(x-4,8); ctx.lineTo(x+4,8); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x,H-16); ctx.lineTo(x,H-4); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x,H-2); ctx.lineTo(x-4,H-8); ctx.lineTo(x+4,H-8); ctx.fill(); }
+  // J contour around the right tip, with a tracer
+  const Rj=(0.45+0.35*u)*s, tx=X(a), ty=Y(0), ph=t*1.4;
+  ctx.setLineDash([6,5]); ctx.lineDashOffset=-t*20; ctx.strokeStyle='#fff'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.arc(tx,ty,Rj,-Math.PI+.08,Math.PI-.08); ctx.stroke(); ctx.setLineDash([]);
+  const ang=-Math.PI+.08+((ph%(2*Math.PI))/(2*Math.PI))*(2*Math.PI-.16), px=tx+Rj*Math.cos(ang), py=ty-Rj*Math.sin(ang);
+  ctx.fillStyle='#fff'; ctx.strokeStyle='#111'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(px,py,4.5,0,7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.font='italic 18px Spectral, Georgia, serif'; ctx.fillText('Γ',tx+Rj*.75,ty-Rj*.85);
+  ha.textContent='2a = '+(2*a).toFixed(2)+' (relative)'; hk.textContent='K/K₀ = '+Math.sqrt(a/0.4).toFixed(2)+'  ·  J/J₀ = '+(a/0.4).toFixed(2);
+}
+function frame(now){ const dt=Math.min(.05,(now-last)/1000); last=now; if(visible){ if(playing) t+=dt; draw(); } requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
