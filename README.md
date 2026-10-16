@@ -79,4 +79,23 @@ pdflatex stress-intensity-notes.tex
 - **Code** (the JavaScript in the HTML pages and `notes/make_figures.py`): MIT, see [`LICENSE`](LICENSE).
 - **Documentation** (page text, equations, figures and the lecture notes): CC BY 4.0, see [`LICENSE-docs.md`](LICENSE-docs.md).
 
-When reusing the material, please credit: Dr Régis Kubler, Arts et Métiers Institute of Technology.
+## Author
+
+**Dr Régis Kubler**, Arts et Métiers Institute of Technology.
+Developed with the assistance of Claude Opus 5.5 (Anthropic), October 2026.
+
+## Cite as
+
+> Kubler, R. (2026). *Fracture Mechanics Companion*. Arts et Métiers Institute of Technology. Zenodo. DOI: https://doi.org/10.5281/zenodo.
+
+```bibtex
+@software{kubler_2026_fracture,
+  author    = {Kubler, Régis},
+  title     = {Fracture Mechanics Companion},
+  year      = {2026},
+  month     = oct,
+  publisher = {Zenodo},
+  institution = {Arts et Métiers Institute of Technology},
+  doi       = {https://doi.org/10.5281/zenodo.}
+}
+```
