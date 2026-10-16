@@ -86,7 +86,7 @@ Developed with the assistance of Claude Opus 5.5 (Anthropic), October 2026.
 
 ## Cite as
 
-> Kubler, R. (2026). *Fracture Mechanics Companion*. Arts et Métiers Institute of Technology. Zenodo. DOI: https://doi.org/10.5281/zenodo.
+> Kubler, R. (2026). *Fracture Mechanics Companion*. Arts et Métiers Institute of Technology. Zenodo. DOI: https://doi.org/10.5281/zenodo.23421418
 
 ```bibtex
 @software{kubler_2026_fracture,
@@ -96,6 +96,6 @@ Developed with the assistance of Claude Opus 5.5 (Anthropic), October 2026.
   month     = oct,
   publisher = {Zenodo},
   institution = {Arts et Métiers Institute of Technology},
-  doi       = {https://doi.org/10.5281/zenodo.}
+  doi       = {https://doi.org/10.5281/zenodo.23421418}
 }
 ```
