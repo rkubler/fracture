@@ -10,7 +10,7 @@
 /* Layout: same lab-notebook sequence as the stress intensity page; each section a live figure beside its reasoning. */
 :root{
   --bg:#edf0f3; --surface:#f9fafb; --ink:#152030; --muted:#566475; --rule:#cdd5de;
-  --accent:#1d58b8; --hot:#d9561a; --plate:#dfe5ec; --cool:#3f78cf;
+  --accent:#80276c; --hot:#e08a00; --plate:#dfe5ec; --cool:#3f78cf;
   --heat1:#f3cf74; --heat2:#e0661b; --heat3:#9b1230;
   --f-display:"Spectral", Georgia, "Times New Roman", serif;
   --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -19,11 +19,11 @@
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
-  --accent:#82abff; --hot:#ff8a3d; --plate:#1c2530; --cool:#5b92ea;
+  --accent:#d08bc3; --hot:#ffa300; --plate:#1c2530; --cool:#5b92ea;
   --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark } }
 :root[data-theme="dark"]{
   --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
-  --accent:#82abff; --hot:#ff8a3d; --plate:#1c2530; --cool:#5b92ea;
+  --accent:#d08bc3; --hot:#ffa300; --plate:#1c2530; --cool:#5b92ea;
   --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark }
 
 *{box-sizing:border-box}
@@ -163,6 +163,8 @@ ol.how>li{min-width:0} ol.how .eq{margin-top:6px}
 header h1,header .lede{max-width:none}
 .credit{margin:0;font-size:.8125rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px}
 .credit b{color:var(--ink);font-weight:600}
+
+#f1 .text p, #f1 ol.how, #f1 .tbl{max-width:none} #f1 .tbl table{width:100%}
 </style>
 </head>
 <body>

@@ -10,7 +10,7 @@
 /* Layout: same lab-notebook sequence as the stress intensity page; each section a live figure beside its reasoning. */
 :root{
   --bg:#edf0f3; --surface:#f9fafb; --ink:#152030; --muted:#566475; --rule:#cdd5de;
-  --accent:#1d58b8; --hot:#d9561a; --plate:#dfe5ec; --cool:#3f78cf;
+  --accent:#80276c; --hot:#e08a00; --plate:#dfe5ec; --cool:#3f78cf;
   --heat1:#f3cf74; --heat2:#e0661b; --heat3:#9b1230;
   --f-display:"Spectral", Georgia, "Times New Roman", serif;
   --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -19,11 +19,11 @@
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
-  --accent:#82abff; --hot:#ff8a3d; --plate:#1c2530; --cool:#5b92ea;
+  --accent:#d08bc3; --hot:#ffa300; --plate:#1c2530; --cool:#5b92ea;
   --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark } }
 :root[data-theme="dark"]{
   --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
-  --accent:#82abff; --hot:#ff8a3d; --plate:#1c2530; --cool:#5b92ea;
+  --accent:#d08bc3; --hot:#ffa300; --plate:#1c2530; --cool:#5b92ea;
   --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark }
 
 *{box-sizing:border-box}
@@ -102,6 +102,12 @@ footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font
 .ssy h3{font-family:var(--f-display);font-weight:600;font-size:1.15rem;margin:0}
 .ssy p{margin:0;max-width:62ch}
 .ssy-figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.ssy.wide{grid-column:1/-1;gap:16px}
+.ssy.wide>p{max-width:90ch}
+.ssy.wide .ssy-figs{gap:28px}
+.ssy.wide .tdg{max-width:none}
+.ssy-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:860px){ .ssy-row{grid-template-columns:minmax(0,1fr);gap:12px} }
 .ssy .kz{fill:var(--accent);fill-opacity:.14;stroke:var(--accent);stroke-width:1.5;stroke-dasharray:5 4}
 .ssy .pz{fill:var(--hot);fill-opacity:.45;stroke:var(--hot);stroke-width:1.5}
 .ssy .gr{stroke:var(--rule);stroke-width:1} .ssy .tk{fill:var(--muted);font-family:var(--f-mono);font-size:10px}
@@ -125,16 +131,35 @@ a.cite:hover{text-decoration:underline}
 .cfig img{width:100%;height:auto;display:block;background:#fff;border-radius:3px}
 .cfig figcaption{font-size:var(--s1);color:var(--muted)}
 
+/* full-width introduction and author credit */
+header h1,header .lede{max-width:none}
+.credit{margin:0;font-size:.8125rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px}
+.credit b{color:var(--ink);font-weight:600}
+.tdg .face{fill:var(--plate);stroke:var(--ink);stroke-width:1.2;stroke-linejoin:round}
+.tdg .cp{fill:var(--bg);stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.tdg .cr2{stroke:var(--ink);stroke-width:2}
+.tdg .pz6{fill:var(--hot);fill-opacity:.5;stroke:var(--hot);stroke-width:1.5;stroke-linejoin:round}
+.tdg .fr{stroke:var(--hot);stroke-width:2.5}
+.tdg .ldr{stroke:var(--muted);stroke-width:1}
+.eq.wrap{white-space:normal}
+#c6b{aspect-ratio:16/8}
+@media (max-width:520px){ #c6b{aspect-ratio:4/5} #c6c{aspect-ratio:1/1} #c6d{aspect-ratio:1/1} }
+
 a.back{color:var(--accent);text-decoration:none;text-transform:none;letter-spacing:0}
 a.back:hover{text-decoration:underline}
 section.scene.one{grid-template-columns:minmax(0,1fr)}
 section.scene.one .text p, section.scene.one .tbl{max-width:80ch}
+#j1 .text p, #j1 .tbl{max-width:none} #j1 .tbl table{width:100%}
 .tdg.wide{max-width:600px}
 .eq.wrap{white-space:normal}
 .tbox{display:grid;gap:10px;background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:6px;padding:14px 16px}
 .tbox h3{font-family:var(--f-display);font-weight:600;font-size:1.1rem;margin:0}
 .tbox p{margin:0;max-width:62ch}
-@media (max-width:560px){ #mc{aspect-ratio:4/5} }
+#jd{aspect-ratio:16/11}
+@media (max-width:560px){ #mc{aspect-ratio:4/5} #jd{aspect-ratio:4/5} }
+h3.sub{font-family:var(--f-display);font-weight:600;font-size:1.15rem;margin:8px 0 0}
+.tdg .jdz0{fill:var(--plate);stroke:var(--rule)} .tdg .jdz1{fill:var(--cool);fill-opacity:.35} .tdg .jdz2{fill:var(--hot);fill-opacity:.3} .tdg .jdz3{fill:var(--accent);fill-opacity:.45} .tdg .jdz4{fill:var(--muted);fill-opacity:.7}
+.tdg .jdt{font-family:var(--f-mono);font-size:12px;fill:var(--ink)} .tdg .jdn{font-family:var(--f-mono);font-size:12px;font-weight:600;fill:var(--ink)}
 [hidden]{display:none!important}
 ol.how>li{min-width:0} ol.how .eq{margin-top:6px}
 .tdg .gam{fill:none;stroke:var(--accent);stroke-width:2.4}
@@ -352,7 +377,7 @@ header h1,header .lede{max-width:none}
       <div class="ctl"><label for="cn">ν <output id="cno"></output></label><input type="range" id="cn" min="0" max="0.5" step="0.01" value="0.34"></div>
       <div class="seg" role="group" aria-label="Stress state"><button data-cst="pe" aria-pressed="true">Plane strain</button><button data-cst="ps" aria-pressed="false">Plane stress</button></div>
     </div>
-    <p class="note">Default values: the Ti-6Al-4V example from scene 6 of the stress intensity page, K = 38.6 MPa√m, E = 114 GPa, ν = 0.34. The same crack, the same energy: J is just K written as an energy.</p>
+    <p class="note">Default values: the Ti-6Al-4V example from section 6 of the stress intensity page, K = 38.6 MPa√m, E = 114 GPa, ν = 0.34. The same crack, the same energy: J is just K written as an energy.</p>
   </div>
 </section>
 
@@ -368,6 +393,21 @@ header h1,header .lede{max-width:none}
       <div><span>ε ∝ r^…</span><strong id="ohe">—</strong></div>
       <div><span>σ·ε ∝ r^…</span><strong id="ohw">−1</strong></div>
     </div>
+    <canvas id="jd" style="margin-top:18px" aria-label="Zones ahead of the crack tip and log-log plot of the opening stress versus distance, showing where the K field and the HRR field hold"></canvas>
+    <div class="controls">
+      <button id="jdp">Play</button>
+      <div class="ctl"><label for="jdl">Load (b σ₀/J falls as load rises) <output id="jdlo"></output></label><input type="range" id="jdl" min="0" max="100" step="1" value="35"></div>
+      <label class="ctl" style="flex:0 1 auto">Geometry<select id="jdg"><option value="bend">Deep-cracked bend (SENB, CT)</option><option value="ten">Centre-cracked tension</option></select></label>
+    </div>
+    <div class="readout">
+      <div><span>b σ₀/J</span><strong id="ojM">—</strong></div>
+      <div><span>J annulus R<sub>J</sub></span><strong id="ojR">—</strong></div>
+      <div><span>J-dominant?</span><strong id="ojJ">—</strong></div>
+      <div><span>K-dominant?</span><strong id="ojK">—</strong></div>
+      <div><span>Q (schematic)</span><strong id="ojQ">—</strong></div>
+    </div>
+    <span class="flag" id="jdf"></span>
+    <p class="note">Schematic, not a finite element result. Distances are in units of J/σ<sub>0</sub>, for E′/σ<sub>0</sub> = 400. Press Play to raise the load: the plastic zone grows, the K annulus disappears first, then the HRR annulus is squeezed between the blunting zone and the ligament. A bend specimen keeps J-dominance much longer than a centre-cracked panel in tension.</p>
   </div>
   <div class="text">
     <div class="step">Section 6 · Elastic–plastic crack tips</div>
@@ -381,10 +421,38 @@ header h1,header .lede{max-width:none}
       <small>ε<sub>ij</sub> = α ε<sub>0</sub> ( EJ / (α σ<sub>0</sub>² I<sub>n</sub> r) )<sup>n/(n+1)</sup> ε̃<sub>ij</sub>(n, θ). I<sub>n</sub> (about 4 to 6 for practical n) and the angular functions σ̃<sub>ij</sub>, ε̃<sub>ij</sub> are tabulated numerically.</small>
       <small class="src">Source: Hutchinson <a class="cite" href="#ref4">[4]</a>; Rice &amp; Rosengren <a class="cite" href="#ref5">[5]</a>; Shih <a class="cite" href="#ref6">[6]</a></small></div>
     <p>J plays exactly the role K plays in LEFM: it is the single amplitude of a universal near-tip field. Set n = 1 in the figure and the stress slope returns to −½, the elastic 1/√r singularity, with J = K²/E′. The product σε always has slope −1, whatever n.</p>
+    <p class="note"><b>What is r<sub>ref</sub>?</b> It is the reference radius used to normalise the figure: each line is scaled to 1 at r = r<sub>ref</sub>, so only the slopes matter. A natural choice from eq. (9) is r<sub>ref</sub> = EJ / (α σ<sub>0</sub>² I<sub>n</sub>) = J / (α σ<sub>0</sub> ε<sub>0</sub> I<sub>n</sub>), the radius where the amplitude factor in brackets equals 1. It grows in proportion to J, so a higher load enlarges the HRR field without changing its slopes.</p>
     <div class="eq"><span class="eqno">(10)</span>J = d<sub>n</sub> σ<sub>0</sub> δ<sub>t</sub> &nbsp;⇔&nbsp; δ<sub>t</sub> = J / (m σ<sub>0</sub>)
       <small>Crack-tip opening displacement (CTOD). d<sub>n</sub> ranges from about 0.3 to 0.8 depending on n and the stress state, so m ≈ 1 to 2.</small>
       <small class="src">Source: Shih <a class="cite" href="#ref6">[6]</a></small></div>
-    <p class="note"><b>J-dominance.</b> The HRR field holds in an annulus around the tip, just as the K field does in LEFM. Very close to the tip, large deformation and blunting take over (within about 2δ<sub>t</sub>). Far away, the specimen geometry matters. A single-parameter J description needs the annulus to exist, which ASTM E1820 <a class="cite" href="#ref9">[9]</a> enforces with size limits such as B, b<sub>0</sub> &gt; 10 J<sub>Q</sub>/σ<sub>Y</sub>.</p>
+    <h3 class="sub">K-dominance and J-dominance</h3>
+    <p>A single parameter describes the crack tip only where its field actually holds. Around the tip, from the inside out, there are five regions. The second figure in this section shows them along the line ahead of the tip:</p>
+    <svg class="tdg wide" viewBox="0 0 600 132" role="img" aria-label="Nested zones around a crack tip: blunting zone, J-dominated HRR annulus, rest of the plastic zone, K-dominated elastic annulus, outer field">
+      <rect x="1" y="1" width="598" height="130" rx="6" class="jdz0"/>
+      <ellipse cx="150" cy="66" rx="142" ry="58" class="jdz1"/>
+      <ellipse cx="150" cy="66" rx="94" ry="40" class="jdz2"/>
+      <ellipse cx="150" cy="66" rx="54" ry="25" class="jdz3"/>
+      <circle cx="150" cy="66" r="11" class="jdz4"/>
+      <path d="M10 66 H139" class="dsx"/>
+      <text x="150" y="70" text-anchor="middle" class="jdn">1</text>
+      <text x="186" y="70" text-anchor="middle" class="jdn">2</text>
+      <text x="224" y="70" text-anchor="middle" class="jdn">3</text>
+      <text x="268" y="70" text-anchor="middle" class="jdn">4</text>
+      <text x="20" y="22" text-anchor="middle" class="jdn">5</text>
+      <rect x="312" y="12" width="14" height="14" rx="2" class="jdz4" stroke="var(--rule)"/><text x="332" y="24" class="jdt">1. blunting, r &lt; 2δ<tspan dy="3" font-size="9">t</tspan></text>
+      <rect x="312" y="34" width="14" height="14" rx="2" class="jdz3" stroke="var(--rule)"/><text x="332" y="46" class="jdt">2. HRR field: J-dominated</text>
+      <rect x="312" y="56" width="14" height="14" rx="2" class="jdz2" stroke="var(--rule)"/><text x="332" y="68" class="jdt">3. rest of the plastic zone: J–Q</text>
+      <rect x="312" y="78" width="14" height="14" rx="2" class="jdz1" stroke="var(--rule)"/><text x="332" y="90" class="jdt">4. elastic annulus: K-dominated</text>
+      <rect x="312" y="100" width="14" height="14" rx="2" class="jdz0" stroke="var(--rule)"/><text x="332" y="112" class="jdt">5. outer field: geometry, load</text>
+    </svg>
+    <p><b>K-dominance</b> needs an elastic annulus outside the plastic zone where σ<sub>ij</sub> ≈ K/√(2πr) f<sub>ij</sub>(θ). This is small-scale yielding, and then J = K²/E′. ASTM E399 <a class="cite" href="#ref10">[10]</a> enforces it with a, B, b ≥ 2.5 (K/σ<sub>Y</sub>)², about fifty times the plastic zone size. <b>J-dominance</b> is weaker: it only needs the HRR field of eq. (9) inside the plastic zone, between the blunting zone and the region influenced by the free boundaries. The K annulus can be gone and J still governs the tip.</p>
+    <div class="eq"><span class="eqno">(11)</span>b, B ≥ M · J / σ<sub>0</sub>, &nbsp; M ≈ 25 (bend), M ≈ 200 (tension)
+      <small>b is the uncracked ligament. Deep-cracked bend and CT specimens keep high constraint, centre-cracked panels in tension lose it early. ASTM E1820 <a class="cite" href="#ref9">[9]</a> uses M = 10 for J<sub>Ic</sub>. The blunting zone, about 2δ<sub>t</sub> ≈ 1–2 J/σ<sub>0</sub>, sets the inner limit <a class="cite" href="#ref24">[24]</a>.</small>
+      <small class="src">Source: McMeeking &amp; Parks <a class="cite" href="#ref22">[22]</a>; Shih &amp; German <a class="cite" href="#ref23">[23]</a></small></div>
+    <p>When the ligament is too small, the fields of different geometries at the same J no longer agree. A second parameter measures the difference, either the elastic T-stress <a class="cite" href="#ref18">[18]</a> or the triaxiality parameter Q <a class="cite" href="#ref19">[19]</a>, see <a class="back" href="#j3">the T-stress box in section 3</a>:</p>
+    <div class="eq"><span class="eqno">(12)</span>σ<sub>ij</sub> ≈ (σ<sub>ij</sub>)<sub>HRR</sub> + Q σ<sub>0</sub> δ<sub>ij</sub> &nbsp; (|θ| ≤ π/2, J/σ<sub>0</sub> &lt; r &lt; 5J/σ<sub>0</sub>)
+      <small>Q ≈ 0 for a high-constraint geometry (J-dominance holds). Q &lt; 0 means lower stress triaxiality and a higher apparent toughness: J<sub>c</sub> becomes a function J<sub>c</sub>(Q), the J–Q toughness locus. In the figure the solid curve leaves the HRR line by Q as the load rises.</small>
+      <small class="src">Source: O'Dowd &amp; Shih <a class="cite" href="#ref19">[19]</a>; Betegón &amp; Hancock <a class="cite" href="#ref18">[18]</a></small></div>
   </div>
 </section>
 
@@ -409,10 +477,10 @@ header h1,header .lede{max-width:none}
     <div class="step">Section 7 · Measuring J</div>
     <h2>J from the area under a load–displacement record</h2>
     <p>Path independence means J can also be obtained from global quantities. For a deeply cracked bend specimen almost all plastic work goes into the ligament, and Rice, Paris and Merkle <a class="cite" href="#ref8">[8]</a> showed that J follows from the area under the load–displacement curve. ASTM E1820 <a class="cite" href="#ref9">[9]</a> splits J into an elastic part, computed from K exactly as in LEFM, and a plastic part:</p>
-    <div class="eq"><span class="eqno">(11)</span>J = K²(1 − ν²)/E + η<sub>pl</sub> U<sub>pl</sub> / (B b<sub>0</sub>)
+    <div class="eq"><span class="eqno">(13)</span>J = K²(1 − ν²)/E + η<sub>pl</sub> U<sub>pl</sub> / (B b<sub>0</sub>)
       <small>U<sub>pl</sub> is the plastic area under P–Δ (shaded), B the thickness, b<sub>0</sub> = W − a<sub>0</sub> the ligament, η<sub>pl</sub> = 1.9 for a single-edge bend specimen.</small>
       <small class="src">Source: Rice, Paris &amp; Merkle <a class="cite" href="#ref8">[8]</a>; ASTM E1820 <a class="cite" href="#ref9">[9]</a></small></div>
-    <div class="eq"><span class="eqno">(12)</span>K = P S / (B W<sup>3/2</sup>) · f(a/W)
+    <div class="eq"><span class="eqno">(14)</span>K = P S / (B W<sup>3/2</sup>) · f(a/W)
       <small>f(a/W) = 3(a/W)<sup>½</sup>[1.99 − (a/W)(1 − a/W)(2.15 − 3.93a/W + 2.7(a/W)²)] / [2(1 + 2a/W)(1 − a/W)<sup>3/2</sup>], three-point bending with span S = 4W.</small>
       <small class="src">Source: ASTM E399 <a class="cite" href="#ref10">[10]</a>; Tada et al. <a class="cite" href="#ref16">[16]</a></small></div>
     <p>The record in the figure is illustrative: a steel bend bar with W = 50 mm, B = 25 mm, a<sub>0</sub>/W = 0.5, S = 200 mm, E = 200 GPa, σ<sub>Y</sub> = 500 MPa, with a Ramberg–Osgood-type plastic response. Early in the test J ≈ J<sub>el</sub> = K²/E′, the LEFM value. As the ligament yields, J<sub>pl</sub> takes over and K computed elastically underestimates the crack driving force.</p>
@@ -444,6 +512,9 @@ header h1,header .lede{max-width:none}
     <li id="ref19">N. P. O'Dowd, C. F. Shih (1991). Family of crack-tip fields characterized by a triaxiality parameter — I. Structure of fields. <i>Journal of the Mechanics and Physics of Solids</i> 39, 989–1015.</li>
     <li id="ref20">B. Cotterell, J. R. Rice (1980). Slightly curved or kinked cracks. <i>International Journal of Fracture</i> 16, 155–169.</li>
     <li id="ref21">P. S. Leevers, J. C. Radon (1982). Inherent stress biaxiality in various fracture specimen geometries. <i>International Journal of Fracture</i> 19, 311–325.</li>
+    <li id="ref22">R. M. McMeeking, D. M. Parks (1979). On criteria for J-dominance of crack-tip fields in large-scale yielding. In <i>ASTM STP 668</i>, 175–194.</li>
+    <li id="ref23">C. F. Shih, M. D. German (1981). Requirements for a one parameter characterization of crack tip fields by the HRR singularity. <i>International Journal of Fracture</i> 17, 27–43.</li>
+    <li id="ref24">R. M. McMeeking (1977). Finite deformation analysis of crack-tip opening in elastic–plastic materials and implications for fracture. <i>Journal of the Mechanics and Physics of Solids</i> 25, 357–381.</li>
   </ol>
   <p class="note">Equation numbers are local to this page. Use the back link at the top to return to the stress intensity page.</p>
 </section>
@@ -594,7 +665,7 @@ function playBtn(btn,s){ const set=()=>btn.textContent=s.playing?'Pause':'Play';
     const tl=Math.hypot(tr[0],tr[1])/tmax*Math.min(70,w*.09);
     const harrow=(x2,y2,col)=>{ ctx.lineWidth=5; ctx.strokeStyle='#fff'; ctx.fillStyle='#fff'; arrow(ctx,px,py,x2,y2,10); ctx.lineWidth=2.2; ctx.strokeStyle=col; ctx.fillStyle=col; arrow(ctx,px,py,x2,y2,7); };
     harrow(px+m[2]*34,py-m[3]*34,'#111');
-    if(tl>2){ const a=Math.atan2(tr[1],tr[0]); harrow(px+Math.cos(a)*tl,py-Math.sin(a)*tl,'#c2187a'); }
+    if(tl>2){ const a=Math.atan2(tr[1],tr[0]); harrow(px+Math.cos(a)*tl,py-Math.sin(a)*tl,'#138a8a'); }
     ctx.fillStyle='#fff'; ctx.strokeStyle='#111'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(px,py,4.5,0,7); ctx.fill(); ctx.stroke();
     label(ctx,'n',px+m[2]*42,py-m[3]*42,{align:'center',size:14,font:SERIF,color:C.ink,bg:true});
     label(ctx,'Γ',X(D.P[Math.round(D.n*.3)][0])+10,Y(D.P[Math.round(D.n*.3)][1])+12,{size:16,font:SERIF,bg:true});
@@ -602,7 +673,7 @@ function playBtn(btn,s){ const set=()=>btn.textContent=s.playing?'Pause':'Play';
     const Jt=D.c1[kk]+D.c2[kk];
     label(ctx,'J so far = '+Jt.toFixed(2)+' kJ/m²',10,16,{size:12,bg:true});
     label(ctx,'K²/E′ = '+(st.shape==='loop'?'0 (tip outside Γ)':D.JK0.toFixed(2)+' kJ/m²'),10,38,{size:12,bg:true,color:C.muted});
-    label(ctx,'traction T',w-10,h-14,{align:'right',size:11,color:'#c2187a',bg:true});
+    label(ctx,'traction T',w-10,h-14,{align:'right',size:11,color:'#138a8a',bg:true});
     label(ctx,'normal n (black)',w-10,h-34,{align:'right',size:11,color:C.ink,bg:true});
     ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(X(-1),h-6); ctx.lineTo(X(0),h-6); ctx.stroke();
     label(ctx,'1 mm',X(-0.5),h-14,{align:'center',size:10,bg:true});
@@ -661,6 +732,71 @@ function playBtn(btn,s){ const set=()=>btn.textContent=s.playing?'Pause':'Play';
     label(ctx,n===1?'n = 1: HRR = elastic K field, J = K²/E′':n>=15?'n large: almost perfectly plastic, σ nearly bounded':'n = '+n+': stress singularity weaker than 1/√r',b.x+8,b.y+b.h-14,{size:11,color:C.muted,bg:true});
   };
 }
+
+/* ---------- Section 6b: K- and J-dominance (schematic) ---------- */
+{
+  const s={cv:makeCanvas(document.getElementById('jd')),t:0,playing:false,visible:false};
+  scenes.push(s); playBtn(document.getElementById('jdp'),s);
+  const sl=document.getElementById('jdl'), so=document.getElementById('jdlo'), geo=document.getElementById('jdg'), hn=document.getElementById('hn');
+  const el=id=>document.getElementById(id);
+  const Er=400;                                   // E'/sigma_0, steel-like
+  const GEO={bend:{Mc:25,Q:-0.35,name:'deep-cracked bend'},ten:{Mc:200,Q:-1.0,name:'centre-cracked tension'}};
+  const Mof=v=>Math.pow(10,3.5-3*v/100);
+  sl.addEventListener('input',()=>{ s.playing=false; s.syncBtn&&s.syncBtn(); });
+  const sstep=u=>u<=0?0:u>=1?1:u*u*(3-2*u);
+  s.draw=()=>{ const {ctx,w,h}=s.cv; if(!w) return;
+    if(s.playing){ const ph=(s.t%9)/7; sl.value=Math.round(Math.min(1,ph)*100); }
+    const M=Mof(+sl.value), G=GEO[geo.value], n=+hn.value;
+    so.textContent=(M>=100?M.toFixed(0):M.toFixed(1));
+    const rp0=Er/(3*Math.PI), rp=Math.min(rp0,M), blunt=2;
+    const RJ=Math.min(0.2*rp,3*M/G.Mc), Jok=RJ>=3, Kok=M>=2.5*Er, rK=0.1*M;
+    const Qt=G.Q*(1-Math.exp(-G.Mc/M));
+    el('ojM').textContent=(M>=100?M.toFixed(0):M.toFixed(1));
+    el('ojR').textContent=RJ>blunt?RJ.toFixed(1)+' J/σ₀':'none';
+    el('ojJ').textContent=Jok?'yes':'no'; el('ojK').textContent=Kok?'yes':'no';
+    el('ojQ').textContent=Math.abs(Qt)<0.005?'0.00':Qt.toFixed(2);
+    const fl=el('jdf');
+    if(Kok){ fl.className='flag ok'; fl.textContent='Small-scale yielding: K and J both describe the tip (J = K²/E′)'; }
+    else if(Jok){ fl.className='flag ok'; fl.textContent='K-annulus lost, J-dominance holds: b σ₀/J ≥ '+G.Mc+' for '+G.name; }
+    else { fl.className='flag warn'; fl.textContent='J-dominance lost: b σ₀/J < '+G.Mc+', use a second parameter (Q or T)'; }
+    ctx.clearRect(0,0,w,h); ctx.fillStyle=C.surface; ctx.fillRect(0,0,w,h);
+    const L0=-0.3, L1=3.6, bx=52, bw=w-70, X=l=>bx+(l-L0)/(L1-L0)*bw, lg=Math.log10;
+    // zone strip
+    const sy=42, sh=Math.max(34,h*0.12);
+    const zones=[[L0,lg(blunt),C.muted,.35,'blunting','1'],[lg(blunt),lg(Math.max(blunt,RJ)),C.accent,.55,'HRR (J)','2'],
+      [lg(Math.max(blunt,RJ)),lg(rp),C.hot,.35,Kok?'plastic':'plastic: J–Q','3'],[lg(rp),lg(Math.max(rp,Kok?rK:rp)),C.cool,.45,'K field','4'],
+      [lg(Math.max(rp,Kok?rK:rp)),lg(M),C.plate,1,'outer field','5'],[lg(M),L1,C.bg,1,'beyond b','']];
+    ctx.font='11px '+MONO;
+    zones.forEach(([a,b,col,al,txt,num])=>{ a=clamp(a,L0,L1); b=clamp(b,L0,L1); if(b<=a+1e-6) return;
+      ctx.fillStyle=col; ctx.globalAlpha=al; ctx.fillRect(X(a),sy,X(b)-X(a),sh); ctx.globalAlpha=1;
+      const tw=ctx.measureText(txt).width; if(X(b)-X(a)>tw+8) label(ctx,txt,(X(a)+X(b))/2,sy+sh/2,{align:'center',size:11});
+      else if(X(b)-X(a)>12 && num) label(ctx,num,(X(a)+X(b))/2,sy+sh/2,{align:'center',size:11}); });
+    ctx.strokeStyle=C.rule; ctx.lineWidth=1; ctx.strokeRect(bx+.5,sy+.5,bw,sh);
+    const tick=(l,txt,col)=>{ if(l<L0||l>L1) return; ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(X(l),sy-4); ctx.lineTo(X(l),sy+sh+4); ctx.stroke(); label(ctx,txt,X(l),sy-11,{align:'center',size:10,color:col,bg:true}); };
+    if(RJ>blunt) tick(lg(RJ),'R_J',C.accent); if(lg(M)-lg(rp)>0.12) tick(lg(rp),'r_p',C.hot); tick(lg(M),lg(M)-lg(rp)>0.12?'b':'b = r_p',C.ink);
+    label(ctx,(w<480?'Zones ahead of the tip, b σ₀/J = ':'Zones ahead of the tip, at a load giving b σ₀/J = ')+(M>=100?M.toFixed(0):M.toFixed(1)),bx,12,{size:11,base:'middle'});
+    // stress plot
+    const b2={x:bx,y:sy+sh+40,w:bw,h:h-(sy+sh+40)-40}, yl0=-0.75, yl1=0.95;
+    const m=axes(ctx,b2,[L0,L1],[yl0,yl1],{xt:[0,1,2,3],yt:[Math.log10(0.3),0,Math.log10(3)],xf:v=>'10'+['⁰','¹','²','³'][v],yf:v=>v===0?'1':v<0?'0.3':'3',xl:'r σ₀ / J (log)',yl:'σ_yy / σ₀ ahead of the tip (log)'});
+    const hrr=x=>3.0*Math.pow(x/blunt,-1/(n+1)), kf=x=>Math.sqrt(Er/(2*Math.PI*x));
+    const Qx=x=>Qt*sstep((Math.log(x)-Math.log(Math.max(blunt,RJ)))/Math.log(3));
+    const bl=x=>1-Math.exp(-Math.pow(x/0.7,1.3));
+    const act=x=>{ const inner=(hrr(x)+Qx(x)); const u=rp<M?sstep((Math.log(x)-Math.log(rp))/1.2+0.5):0; return Math.max(0.05,bl(x)*((1-u)*inner+u*kf(x))); };
+    const path=(f,col,lw,dash,x0,x1)=>{ ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.setLineDash(dash||[]); ctx.beginPath(); let on=false;
+      for(let k=0;k<=240;k++){ const l=L0+(L1-L0)*k/240; if(l<x0||l>x1) continue; const v=lg(f(Math.pow(10,l))); if(v<yl0-0.3||v>yl1+0.3){ on=false; continue; }
+        const P=[m.X(l),m.Y(v)]; on?ctx.lineTo(P[0],P[1]):ctx.moveTo(P[0],P[1]); on=true; } ctx.stroke(); ctx.setLineDash([]); };
+    ctx.save(); ctx.beginPath(); ctx.rect(b2.x,b2.y,b2.w,b2.h); ctx.clip();
+    if(lg(M)<L1){ ctx.fillStyle=C.bg; ctx.fillRect(m.X(lg(M)),b2.y,b2.x+b2.w-m.X(lg(M)),b2.h); }
+    path(hrr,C.accent,1.6,[6,4],L0,L1); path(kf,C.cool,1.6,[2,3],L0,L1); path(act,C.ink,2.6,null,L0,lg(M));
+    ctx.restore();
+    label(ctx,'HRR, amplitude J',m.X(0.15),m.Y(lg(hrr(1.4)))-12,{size:10,color:C.accent,bg:true});
+    label(ctx,'K field K/√(2πr)',m.X(0.45)+10,m.Y(lg(kf(Math.pow(10,0.45)))),{size:10,color:C.cool,bg:true});
+    label(ctx,'actual field (schematic)',m.X(Math.min(lg(M)-0.05,1.6)),m.Y(lg(act(Math.pow(10,Math.min(lg(M)-0.05,1.6)))))+14,{size:10,bg:true,align:'center'});
+    if(w>=480) label(ctx,'E′/σ₀ = '+Er+', n = '+n+' (slider above)',b2.x+b2.w-4,b2.y+10,{align:'right',size:10,color:C.muted,bg:true});
+  };
+  [sl,geo,hn].forEach(i=>i.addEventListener('input',()=>s.cv.dirty=true));
+}
+
 
 /* ---------- Section 7: J from a bend test record ---------- */
 {

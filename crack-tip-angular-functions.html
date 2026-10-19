@@ -10,7 +10,7 @@
 /* Layout: a lab-notebook sequence of five numbered experiments, each a live figure beside its reasoning. */
 :root{
   --bg:#edf0f3; --surface:#f9fafb; --ink:#152030; --muted:#566475; --rule:#cdd5de;
-  --accent:#1d58b8; --hot:#d9561a; --plate:#dfe5ec; --cool:#3f78cf;
+  --accent:#80276c; --hot:#e08a00; --plate:#dfe5ec; --cool:#3f78cf;
   --heat1:#f3cf74; --heat2:#e0661b; --heat3:#9b1230;
   --f-display:"Spectral", Georgia, "Times New Roman", serif;
   --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -19,11 +19,11 @@
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
-  --accent:#82abff; --hot:#ff8a3d; --plate:#1c2530; --cool:#5b92ea;
+  --accent:#d08bc3; --hot:#ffa300; --plate:#1c2530; --cool:#5b92ea;
   --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark } }
 :root[data-theme="dark"]{
   --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
-  --accent:#82abff; --hot:#ff8a3d; --plate:#1c2530; --cool:#5b92ea;
+  --accent:#d08bc3; --hot:#ffa300; --plate:#1c2530; --cool:#5b92ea;
   --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark }
 
 *{box-sizing:border-box}
@@ -132,6 +132,13 @@ a.cite:hover{text-decoration:underline}
 header h1,header .lede{max-width:none}
 .credit{margin:0;font-size:.8125rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px}
 .credit b{color:var(--ink);font-weight:600}
+.block.full .text p,.block.full ol.how{max-width:none}
+.figrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:16px;align-items:stretch}
+.figrow .tdg{max-width:none}
+.figrow .modes{max-width:none;grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:860px){ .figrow{grid-template-columns:minmax(0,1fr)} }
+.figrow .modes figure{align-content:start}
+@media (max-width:560px){ .figrow .modes{grid-template-columns:minmax(0,1fr)} .figrow .modes svg{max-width:220px;justify-self:center} }
 </style>
 </head>
 <body>
@@ -143,7 +150,7 @@ header h1,header .lede{max-width:none}
   <p class="credit"><b>Author:</b> Dr Régis Kubler, Arts et Métiers Institute of Technology. Developed with the assistance of Claude Opus 5.5 (Anthropic), October 2026. Code: MIT · Documentation: CC BY 4.0.</p>
 </header>
 
-<section class="block">
+<section class="block full">
   <div class="text">
     <div class="step">What changes with geometry, and what does not</div>
     <h2>f<sub>ij</sub>(θ) depends on the loading mode only</h2>
@@ -153,6 +160,7 @@ header h1,header .lede{max-width:none}
       <li>the higher-order terms of the Williams series <a class="cite" href="#ref4">[4]</a>, starting with the T-stress, which control how far from the tip the singular term stays accurate.</li>
     </ol>
   </div>
+<div class="figrow">
 <figure class="tdg">
   <svg viewBox="0 0 340 200" role="img" aria-label="Crack-tip polar coordinates: r is the distance from the tip to the point, theta is the angle measured anticlockwise from the crack line ahead of the tip">
     <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="ahd"/></marker></defs>
@@ -191,6 +199,7 @@ header h1,header .lede{max-width:none}
       <circle class="dot" cx="50" cy="76" r="7"/><path class="ar" d="M45 71 L55 81 M55 71 L45 81"/>
     </svg><figcaption><b>Mode III</b> · tearing<br>shear parallel to the crack front, out of plane</figcaption></figure>
   </div>
+</div>
 </section>
 
 <section class="block">
