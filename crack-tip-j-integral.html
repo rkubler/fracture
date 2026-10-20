@@ -445,7 +445,7 @@ header h1,header .lede{max-width:none}
       <rect x="312" y="78" width="14" height="14" rx="2" class="jdz1" stroke="var(--rule)"/><text x="332" y="90" class="jdt">4. elastic annulus: K-dominated</text>
       <rect x="312" y="100" width="14" height="14" rx="2" class="jdz0" stroke="var(--rule)"/><text x="332" y="112" class="jdt">5. outer field: geometry, load</text>
     </svg>
-    <p><b>K-dominance</b> needs an elastic annulus outside the plastic zone where σ<sub>ij</sub> ≈ K/√(2πr) f<sub>ij</sub>(θ). This is small-scale yielding, and then J = K²/E′. ASTM E399 <a class="cite" href="#ref10">[10]</a> enforces it with a, B, b ≥ 2.5 (K/σ<sub>Y</sub>)², about fifty times the plastic zone size. The annulus has an outer limit too: beyond about 0.1b the other terms of the elastic solution take over and the field depends on the geometry. In the figure the solid curve leaves the K line there, flattening towards the remote stress σ<sub>∞</sub> in centre-cracked tension and falling to zero near mid-ligament in bending, where the stress becomes compressive. <b>J-dominance</b> is weaker: it only needs the HRR field of eq. (9) inside the plastic zone, between the blunting zone and the region influenced by the free boundaries. The K annulus can be gone and J still governs the tip.</p>
+    <p><b>K-dominance</b> needs an elastic annulus outside the plastic zone where σ<sub>ij</sub> ≈ K/√(2πr) f<sub>ij</sub>(θ). This is small-scale yielding, and then J = K²/E′. ASTM E399 <a class="cite" href="#ref10">[10]</a> enforces it with a, B, b ≥ 2.5 (K/σ<sub>Y</sub>)², about fifty times the plastic zone size. The annulus has an outer limit too: beyond about 0.1b the other terms of the elastic solution take over and the field depends on the geometry. In the figure the solid curve leaves the K line there, flattening towards the remote stress σ<sub>∞</sub> in centre-cracked tension and falling to zero near mid-ligament in bending, where the stress becomes compressive. With n = 1 the Ramberg–Osgood law is linear: the material never yields, there is no plastic zone and no blunting, the HRR field is the K field, and the figure shows only the K and outer fields. <b>J-dominance</b> is weaker: it only needs the HRR field of eq. (9) inside the plastic zone, between the blunting zone and the region influenced by the free boundaries. The K annulus can be gone and J still governs the tip.</p>
     <div class="eq"><span class="eqno">(11)</span>b, B ≥ M · J / σ<sub>0</sub>, &nbsp; M ≈ 25 (bend), M ≈ 200 (tension)
       <small>b is the uncracked ligament. Deep-cracked bend and CT specimens keep high constraint, centre-cracked panels in tension lose it early. ASTM E1820 <a class="cite" href="#ref9">[9]</a> uses M = 10 for J<sub>Ic</sub>. The blunting zone, about 2δ<sub>t</sub> ≈ 1–2 J/σ<sub>0</sub>, sets the inner limit <a class="cite" href="#ref24">[24]</a>.</small>
       <small class="src">Source: McMeeking &amp; Parks <a class="cite" href="#ref22">[22]</a>; Shih &amp; German <a class="cite" href="#ref23">[23]</a></small></div>
@@ -751,20 +751,22 @@ function playBtn(btn,s){ const set=()=>btn.textContent=s.playing?'Pause':'Play';
     so.textContent=(M>=100?M.toFixed(0):M.toFixed(1));
     const rp0=Er/(3*Math.PI), rp=Math.min(rp0,M), blunt=2;
     const RJ=Math.min(0.2*rp,3*M/G.Mc), Jok=RJ>=3, Kok=M>=2.5*Er, rK=0.1*M;
-    const Qt=G.Q*(1-Math.exp(-G.Mc/M));
+    const lin=n===1;   // n = 1: Ramberg–Osgood is linear, no yielding, HRR = K field
+    const Qt=lin?0:G.Q*(1-Math.exp(-G.Mc/M));
     el('ojM').textContent=(M>=100?M.toFixed(0):M.toFixed(1));
-    el('ojR').textContent=RJ>blunt?RJ.toFixed(1)+' J/σ₀':'none';
-    el('ojJ').textContent=Jok?'yes':'no'; el('ojK').textContent=Kok?'yes':'no';
+    el('ojR').textContent=lin?'none (linear)':RJ>blunt?RJ.toFixed(1)+' J/σ₀':'none';
+    el('ojJ').textContent=lin||Jok?'yes':'no'; el('ojK').textContent=lin||Kok?'yes':'no';
     el('ojQ').textContent=Math.abs(Qt)<0.005?'0.00':Qt.toFixed(2);
     const fl=el('jdf');
-    if(Kok){ fl.className='flag ok'; fl.textContent='Small-scale yielding: K and J both describe the tip (J = K²/E′)'; }
+    if(lin){ fl.className='flag ok'; fl.textContent='n = 1: linear elastic, no yielding, no blunting. The HRR field is the K field, J = K²/E′ at any load'; }
+    else if(Kok){ fl.className='flag ok'; fl.textContent='Small-scale yielding: K and J both describe the tip (J = K²/E′)'; }
     else if(Jok){ fl.className='flag ok'; fl.textContent='K-annulus lost, J-dominance holds: b σ₀/J ≥ '+G.Mc+' for '+G.name; }
     else { fl.className='flag warn'; fl.textContent='J-dominance lost: b σ₀/J < '+G.Mc+', use a second parameter (Q or T)'; }
     ctx.clearRect(0,0,w,h); ctx.fillStyle=C.surface; ctx.fillRect(0,0,w,h);
     const L0=-0.3, L1=3.6, bx=52, bw=w-70, X=l=>bx+(l-L0)/(L1-L0)*bw, lg=Math.log10;
     // zone strip
     const sy=42, sh=Math.max(34,h*0.12);
-    const zones=[[L0,lg(blunt),C.muted,.35,'blunting','1'],[lg(blunt),lg(Math.max(blunt,RJ)),C.accent,.55,'HRR (J)','2'],
+    const zones=lin?[[L0,lg(rK),C.cool,.45,'K field (= HRR)','4'],[lg(rK),lg(M),C.plate,1,'outer field','5'],[lg(M),L1,C.bg,1,'beyond b','']]:[[L0,lg(blunt),C.muted,.35,'blunting','1'],[lg(blunt),lg(Math.max(blunt,RJ)),C.accent,.55,'HRR (J)','2'],
       [lg(Math.max(blunt,RJ)),lg(rp),C.hot,.35,Kok?'plastic':'plastic: J–Q','3'],[lg(rp),lg(Math.max(rp,Kok?rK:rp)),C.cool,.45,'K field','4'],
       [lg(Math.max(rp,Kok?rK:rp)),lg(M),C.plate,1,'outer field','5'],[lg(M),L1,C.bg,1,'beyond b','']];
     ctx.font='11px '+MONO;
@@ -774,19 +776,20 @@ function playBtn(btn,s){ const set=()=>btn.textContent=s.playing?'Pause':'Play';
       else if(X(b)-X(a)>12 && num) label(ctx,num,(X(a)+X(b))/2,sy+sh/2,{align:'center',size:11}); });
     ctx.strokeStyle=C.rule; ctx.lineWidth=1; ctx.strokeRect(bx+.5,sy+.5,bw,sh);
     const tick=(l,txt,col)=>{ if(l<L0||l>L1) return; ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(X(l),sy-4); ctx.lineTo(X(l),sy+sh+4); ctx.stroke(); label(ctx,txt,X(l),sy-11,{align:'center',size:10,color:col,bg:true}); };
-    if(RJ>blunt) tick(lg(RJ),'R_J',C.accent); if(lg(M)-lg(rp)>0.12) tick(lg(rp),'r_p',C.hot); tick(lg(M),lg(M)-lg(rp)>0.12?'b':'b = r_p',C.ink);
+    if(lin) tick(lg(M),'b',C.ink);
+    else { if(RJ>blunt) tick(lg(RJ),'R_J',C.accent); if(lg(M)-lg(rp)>0.12) tick(lg(rp),'r_p',C.hot); tick(lg(M),lg(M)-lg(rp)>0.12?'b':'b = r_p',C.ink); }
     label(ctx,(w<480?'Zones ahead of the tip, b σ₀/J = ':'Zones ahead of the tip, at a load giving b σ₀/J = ')+(M>=100?M.toFixed(0):M.toFixed(1)),bx,12,{size:11,base:'middle'});
     // stress plot
     const b2={x:bx,y:sy+sh+40,w:bw,h:h-(sy+sh+40)-40}, yl0=-0.75, yl1=0.95;
     const m=axes(ctx,b2,[L0,L1],[yl0,yl1],{xt:[0,1,2,3],yt:[Math.log10(0.3),0,Math.log10(3)],xf:v=>'10'+['⁰','¹','²','³'][v],yf:v=>v===0?'1':v<0?'0.3':'3',xl:'r σ₀ / J (log)',yl:'σ_yy / σ₀ ahead of the tip (log)'});
-    const hrr=x=>3.0*Math.pow(x/blunt,-1/(n+1)), kf=x=>Math.sqrt(Er/(2*Math.PI*x));
+    const kf=x=>Math.sqrt(Er/(2*Math.PI*x)), hrr=x=>lin?kf(x):3.0*Math.pow(x/blunt,-1/(n+1));
     const Qx=x=>Qt*sstep(Math.log(x)/Math.log(blunt));   // uniform shift Q σ0 from r = 2J/σ0 outwards (O'Dowd–Shih)
     const bl=x=>1-Math.exp(-Math.pow(x/0.7,1.3));
     // elastic field outside the plastic zone: K term near the tip, geometry-dependent beyond about 0.1b
     // tension: Westergaard crack-line solution with a = b, tends to the remote stress; bend: K term times a factor that falls to zero at mid-ligament
     const Ck=Math.sqrt(Er/(2*Math.PI)), sinf=Ck*Math.sqrt(2/M);
     const outer=x=>geo.value==='ten'?sinf*(M+x)/Math.sqrt(x*(2*M+x)):kf(x)*(1-Math.pow(2*x/M,1.5));
-    const act=x=>{ const inner=(hrr(x)+Qx(x)); const u=rp<M?sstep((Math.log(x)-Math.log(rp))/1.2+0.5):0; return Math.max(0.05,bl(x)*((1-u)*inner+u*outer(x))); };
+    const act=x=>{ if(lin) return Math.max(0.05,outer(x)); const inner=(hrr(x)+Qx(x)); const u=rp<M?sstep((Math.log(x)-Math.log(rp))/1.2+0.5):0; return Math.max(0.05,bl(x)*((1-u)*inner+u*outer(x))); };
     const path=(f,col,lw,dash,x0,x1)=>{ ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.setLineDash(dash||[]); ctx.beginPath(); let on=false;
       for(let k=0;k<=240;k++){ const l=L0+(L1-L0)*k/240; if(l<x0||l>x1) continue; const v=lg(f(Math.pow(10,l))); if(v<yl0-0.3||v>yl1+0.3){ on=false; continue; }
         const P=[m.X(l),m.Y(v)]; on?ctx.lineTo(P[0],P[1]):ctx.moveTo(P[0],P[1]); on=true; } ctx.stroke(); ctx.setLineDash([]); };
@@ -794,10 +797,10 @@ function playBtn(btn,s){ const set=()=>btn.textContent=s.playing?'Pause':'Play';
     if(lg(M)<L1){ ctx.fillStyle=C.bg; ctx.fillRect(m.X(lg(M)),b2.y,b2.x+b2.w-m.X(lg(M)),b2.h); }
     path(hrr,C.accent,1.6,[6,4],L0,L1); path(kf,C.cool,1.6,[2,3],L0,L1); path(act,C.ink,2.6,null,L0,lg(M));
     ctx.restore();
-    label(ctx,'HRR, amplitude J',m.X(0.15),m.Y(lg(hrr(1.4)))-12,{size:10,color:C.accent,bg:true});
+    label(ctx,lin?'HRR = K field (n = 1)':'HRR, amplitude J',m.X(0.15),m.Y(lg(hrr(1.4)))-12,{size:10,color:C.accent,bg:true});
     const lk=w<480?0.25:1.0; label(ctx,'K field K/√(2πr)',m.X(lk)+10,m.Y(lg(kf(Math.pow(10,lk)))),{size:10,color:C.cool,bg:true});
     // Q read at r = 2J/σ0: gap between the actual field and the T = 0 reference (here HRR with the same blunting)
-    { const lq=lg(blunt), xa=m.X(lq), va=act(blunt), vr=va-bl(blunt)*Qt, ya=m.Y(lg(va)), yr=m.Y(lg(vr));
+    if(!lin){ const lq=lg(blunt), xa=m.X(lq), va=act(blunt), vr=va-bl(blunt)*Qt, ya=m.Y(lg(va)), yr=m.Y(lg(vr));
       ctx.strokeStyle=C.muted; ctx.lineWidth=1; ctx.setLineDash([2,3]); ctx.beginPath(); ctx.moveTo(xa,b2.y); ctx.lineTo(xa,b2.y+b2.h); ctx.stroke(); ctx.setLineDash([]);
       ctx.strokeStyle=C.hot; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(xa-5,yr); ctx.lineTo(xa+5,yr); ctx.moveTo(xa,yr); ctx.lineTo(xa,ya); ctx.moveTo(xa-5,ya); ctx.lineTo(xa+5,ya); ctx.stroke();
       label(ctx,'r = 2J/σ₀',xa+4,b2.y+b2.h-10,{size:10,color:C.muted,bg:true});
