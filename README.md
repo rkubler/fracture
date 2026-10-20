@@ -15,7 +15,10 @@ Open `index.html` to start. It links to all the pages and shows an animated cent
 | `crack-tip-angular-functions.html` | Angular functions f<sub>ij</sub>(θ) for modes I, II and III, mixed-mode loading, T-stress |
 | `crack-tip-j-integral.html` | The J-integral: definition, live contour integration, path independence, J = K²/E′, HRR field, T-stress and constraint, J from a bend test |
 | `crack-tip-fe-fracture.html` | K and J in finite element software: quarter-point elements, a live spider-web mesh solution, extraction methods, collapsed-element variants, an Abaqus how-to and useful links |
+| `crack-tip-experimental-fracture.html` | Measuring K<sub>IC</sub> by ASTM E399: specimens and size rule, fatigue pre-cracking, the 5% secant, and a K<sub>Q</sub> calculator with the validity checks |
 | `notes/stress-intensity-notes.pdf` | LaTeX lecture notes with the equations and figures of the pages |
+| `references.html` | All references cited in the pages and notes, with DOI and Google Scholar links |
+| `download_open_references.sh` | Downloads the references that are legally free (public domain or public reports) |
 
 ## Folder structure
 
@@ -26,6 +29,9 @@ Open `index.html` to start. It links to all the pages and shows an animated cent
 ├── crack-tip-angular-functions.html
 ├── crack-tip-j-integral.html
 ├── crack-tip-fe-fracture.html
+├── crack-tip-experimental-fracture.html
+├── references.html
+├── download_open_references.sh
 ├── assets/            thumbnails used on the index page
 ├── notes/
 │   ├── stress-intensity-notes.pdf
@@ -79,23 +85,4 @@ pdflatex stress-intensity-notes.tex
 - **Code** (the JavaScript in the HTML pages and `notes/make_figures.py`): MIT, see [`LICENSE`](LICENSE).
 - **Documentation** (page text, equations, figures and the lecture notes): CC BY 4.0, see [`LICENSE-docs.md`](LICENSE-docs.md).
 
-## Author
-
-**Dr Régis Kubler**, Arts et Métiers Institute of Technology.
-Developed with the assistance of Claude Opus 5.5 (Anthropic), October 2026.
-
-## Cite as
-
-> Kubler, R. (2026). *Fracture Mechanics Companion*. Arts et Métiers Institute of Technology. Zenodo. DOI: https://doi.org/10.5281/zenodo.23421418
-
-```bibtex
-@software{kubler_2026_fracture,
-  author    = {Kubler, Régis},
-  title     = {Fracture Mechanics Companion},
-  year      = {2026},
-  month     = oct,
-  publisher = {Zenodo},
-  institution = {Arts et Métiers Institute of Technology},
-  doi       = {https://doi.org/10.5281/zenodo.23421418}
-}
-```
+When reusing the material, please credit: Dr Régis Kubler, Arts et Métiers Institute of Technology.

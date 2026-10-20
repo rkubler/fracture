@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fracture Toughness Testing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;1,500&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: same lab-notebook sequence as the stress intensity page; each section a live figure beside its reasoning. */
+:root{
+  --bg:#edf0f3; --surface:#f9fafb; --ink:#152030; --muted:#566475; --rule:#cdd5de;
+  --accent:#80276c; --hot:#e08a00; --plate:#dfe5ec; --cool:#3f78cf;
+  --heat1:#f3cf74; --heat2:#e0661b; --heat3:#9b1230;
+  --f-display:"Spectral", Georgia, "Times New Roman", serif;
+  --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --s1:.8125rem; --s2:.9375rem; --s3:1.0625rem; --s4:1.375rem; --s5:clamp(1.9rem,4.2vw,2.75rem);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
+  --accent:#d08bc3; --hot:#ffa300; --plate:#1c2530; --cool:#5b92ea;
+  --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f141a; --surface:#161d25; --ink:#e4e9ef; --muted:#93a0af; --rule:#2a3542;
+  --accent:#d08bc3; --hot:#ffa300; --plate:#1c2530; --cool:#5b92ea;
+  --heat1:#6e2638; --heat2:#e0661b; --heat3:#ffe2a3; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:var(--s2);line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:1180px;margin:0 auto}
+header{padding-block:44px 20px;display:grid;gap:14px}
+.eyebrow{font-family:var(--f-mono);font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:600;font-size:var(--s5);line-height:1.1;margin:0;text-wrap:balance;max-width:22ch}
+h1 em{font-style:italic;color:var(--accent);font-weight:500}
+.lede{max-width:66ch;margin:0;color:var(--muted);font-size:var(--s3)}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+nav.toc a{font-family:var(--f-mono);font-size:var(--s1);color:var(--ink);text-decoration:none;border:1px solid var(--rule);
+  padding:5px 10px;border-radius:999px;background:var(--surface)}
+nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--accent);color:var(--accent)}
+nav.toc b{color:var(--accent);font-weight:500;margin-right:6px}
+
+section.scene{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;padding-block:36px;border-top:1px solid var(--rule)}
+@media (max-width:860px){ section.scene{grid-template-columns:minmax(0,1fr);gap:18px} }
+.fig{display:grid;gap:10px;min-width:0;align-content:start}
+canvas{display:block;width:100%;aspect-ratio:16/10;max-width:100%;border-radius:6px;background:var(--surface);border:1px solid var(--rule);touch-action:none}
+.text{min-width:0;display:grid;gap:12px;align-content:start}
+.step{font-family:var(--f-mono);font-size:var(--s1);color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+h2{font-family:var(--f-display);font-weight:600;font-size:var(--s4);line-height:1.2;margin:0;text-wrap:balance}
+.text p{margin:0;max-width:62ch}
+.eq{font-family:var(--f-display);font-size:1.2rem;background:var(--surface);border:1px solid var(--rule);border-radius:6px;
+  padding:12px 14px;overflow-x:auto;white-space:nowrap}
+.eq small{display:block;font-family:var(--f-body);font-size:var(--s1);color:var(--muted);white-space:normal;margin-top:4px}
+.sym{font-family:var(--f-display);font-style:italic}
+sub,sup{font-size:.72em;line-height:0}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.ctl{display:grid;gap:2px;min-width:0;flex:1 1 170px}
+.ctl label{font-size:var(--s1);color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.ctl label output{font-family:var(--f-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select{font:inherit;font-size:var(--s1);padding:6px 8px;border-radius:6px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);max-width:100%}
+button{font:inherit;font-size:var(--s1);font-weight:500;cursor:pointer;border-radius:6px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--ink);padding:6px 12px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;border-right:1px solid var(--rule)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.readout div{background:var(--surface);padding:8px 10px;display:grid;gap:1px}
+.readout span{font-size:.75rem;color:var(--muted)}
+.readout strong{font-family:var(--f-mono);font-weight:500;font-size:1rem;font-variant-numeric:tabular-nums}
+.calc{font-family:var(--f-mono);font-size:var(--s1);background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:12px 14px;
+  display:grid;gap:4px;overflow-x:auto;font-variant-numeric:tabular-nums}
+.calc .res{color:var(--accent);font-weight:500;font-size:var(--s2)}
+.note a{color:var(--accent)}
+.note{font-size:var(--s1);color:var(--muted);border-left:2px solid var(--rule);padding-left:10px}
+.flag{font-family:var(--f-mono);font-size:.75rem;padding:2px 8px;border-radius:999px;border:1px solid currentColor;justify-self:start}
+.flag.ok{color:var(--accent)} .flag.warn{color:var(--hot)}
+ol.how{margin:0;padding-left:1.3em;display:grid;gap:4px;max-width:62ch}
+canvas.short{aspect-ratio:16/7}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--surface)}
+.tbl table{border-collapse:collapse;width:100%;font-size:var(--s1)}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+.tbl tr:last-child th,.tbl tr:last-child td{border-bottom:0}
+.tbl thead th{font-weight:600;color:var(--accent)}
+.tbl tbody th{font-weight:500;color:var(--muted);white-space:nowrap}
+footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font-size:var(--s1);max-width:80ch}
+.tdg{margin:0;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;display:grid;gap:6px;max-width:520px}
+.tdg svg{width:100%;height:auto;display:block}
+.tdg figcaption{font-size:var(--s1);color:var(--muted)}
+.tdg .mat{fill:var(--plate)} .tdg .cr{fill:var(--bg);stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round}
+.tdg .ax{stroke:var(--ink);stroke-width:1.3;fill:none} .tdg .ahd{fill:var(--ink)}
+.tdg .rr{stroke:var(--accent);stroke-width:2;stroke-dasharray:5 4} .tdg .arc{stroke:var(--accent);stroke-width:1.6;fill:none}
+.tdg .pt{fill:var(--hot)} .tdg .tip{fill:var(--hot)}
+.tdg text{font-family:var(--f-body);font-size:12px} .tdg .lbl{fill:var(--ink);font-family:var(--f-display);font-style:italic;font-size:16px}
+.tdg .acc{fill:var(--accent)} .tdg .mut{fill:var(--muted);font-size:11px}
+.ssy{display:grid;gap:12px;border-top:1px solid var(--rule);padding-top:14px}
+.ssy h3{font-family:var(--f-display);font-weight:600;font-size:1.15rem;margin:0}
+.ssy p{margin:0;max-width:62ch}
+.ssy-figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.ssy.wide{grid-column:1/-1;gap:16px}
+.ssy.wide>p{max-width:90ch}
+.ssy.wide .ssy-figs{gap:28px}
+.ssy.wide .tdg{max-width:none}
+.ssy-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:860px){ .ssy-row{grid-template-columns:minmax(0,1fr);gap:12px} }
+.ssy .kz{fill:var(--accent);fill-opacity:.14;stroke:var(--accent);stroke-width:1.5;stroke-dasharray:5 4}
+.ssy .pz{fill:var(--hot);fill-opacity:.45;stroke:var(--hot);stroke-width:1.5}
+.ssy .gr{stroke:var(--rule);stroke-width:1} .ssy .tk{fill:var(--muted);font-family:var(--f-mono);font-size:10px}
+.ssy .elc{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:5 4} .ssy .plc{fill:none;stroke:var(--hot);stroke-width:2.4}
+.ssy .shed{fill:var(--accent);fill-opacity:.2} .ssy .carry{fill:var(--hot);fill-opacity:.18}
+.ssy .ry{stroke:var(--accent);stroke-dasharray:2 3} .ssy .rp{stroke:var(--hot);stroke-dasharray:2 3}
+.ssy .hot{fill:var(--hot)} .ssy .tk.acc{fill:var(--accent)}
+.eq{position:relative;padding-right:56px}
+.eqno{position:absolute;right:12px;top:12px;font-family:var(--f-mono);font-size:var(--s1);color:var(--muted);font-style:normal}
+.eq small.src{color:var(--accent)}
+a.cite{color:var(--accent);text-decoration:none;font-family:var(--f-mono);font-size:.82em;margin-left:2px;white-space:nowrap}
+a.cite:hover{text-decoration:underline}
+.refs{border-top:1px solid var(--rule);padding-block:28px;display:grid;gap:10px}
+.refs h2{margin:0}
+.refs ol{margin:0;padding-left:1.8em;display:grid;gap:6px;max-width:90ch;font-size:var(--s1)}
+.refs li:target{background:var(--surface);outline:1px solid var(--accent);border-radius:4px}
+.cbar{display:grid;grid-template-columns:auto auto minmax(80px,1fr) auto;align-items:center;gap:8px;font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.cbar i{height:10px;border-radius:2px;border:1px solid var(--rule);background:linear-gradient(to right,#00008f,#0000ff,#00ffff,#ffff00,#ff0000,#800000)}
+.cbar .cbl{color:var(--ink)}
+.cfig{margin:0;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:8px;display:grid;gap:6px}
+.cfig img{width:100%;height:auto;display:block;background:#fff;border-radius:3px}
+.cfig figcaption{font-size:var(--s1);color:var(--muted)}
+
+/* full-width introduction and author credit */
+header h1,header .lede{max-width:none}
+.credit{margin:0;font-size:.8125rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px}
+.credit b{color:var(--ink);font-weight:600}
+.tdg .face{fill:var(--plate);stroke:var(--ink);stroke-width:1.2;stroke-linejoin:round}
+.tdg .cp{fill:var(--bg);stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.tdg .cr2{stroke:var(--ink);stroke-width:2}
+.tdg .pz6{fill:var(--hot);fill-opacity:.5;stroke:var(--hot);stroke-width:1.5;stroke-linejoin:round}
+.tdg .fr{stroke:var(--hot);stroke-width:2.5}
+.tdg .ldr{stroke:var(--muted);stroke-width:1}
+.eq.wrap{white-space:normal}
+#c6b{aspect-ratio:16/8}
+@media (max-width:520px){ #c6b{aspect-ratio:4/5} #c6c{aspect-ratio:1/1} #c6d{aspect-ratio:1/1} }
+
+a.back{color:var(--accent);text-decoration:none;text-transform:none;letter-spacing:0}
+a.back:hover{text-decoration:underline}
+section.scene.one{grid-template-columns:minmax(0,1fr)}
+section.scene.one .text p, section.scene.one .tbl, section.scene.one ol.flow{max-width:none}
+.eq.wrap{white-space:normal}
+.tdg.wide{max-width:600px}
+#xs{aspect-ratio:16/11} #xf{aspect-ratio:16/12} #xr{aspect-ratio:16/11}
+@media (max-width:560px){ #xs,#xf,#xr{aspect-ratio:4/5} }
+ol.flow{margin:0;padding:0;list-style:none;counter-reset:fl;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:10px}
+ol.flow li{counter-increment:fl;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 12px 10px 44px;position:relative;font-size:var(--s1)}
+ol.flow li::before{content:counter(fl);position:absolute;left:12px;top:9px;font-family:var(--f-mono);font-weight:500;color:var(--accent);font-size:1rem}
+ol.flow b{color:var(--ink)}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 12px}
+.form label{display:grid;gap:3px;align-content:end;font-size:var(--s1);color:var(--muted)}
+.form input{font:inherit;font-family:var(--f-mono);font-size:var(--s1);padding:6px 8px;border-radius:6px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);width:100%;min-width:0}
+.calc table.chk{border-collapse:collapse;width:100%;margin-top:6px;font-size:.8125rem}
+.calc table.chk td{padding:4px 6px;border-top:1px solid var(--rule);vertical-align:top}
+.calc table.chk td:first-child{width:1.4em;font-weight:600} .calc table.chk td:last-child{text-align:right;white-space:nowrap}
+.calc table.chk small{color:var(--muted)}
+.calc tr.ok td:first-child{color:var(--accent)} .calc tr.bad td:first-child, .calc tr.bad td:last-child{color:var(--hot)}
+.calc .verdict{margin-top:8px;font-weight:500} .calc .verdict.ok{color:var(--accent)} .calc .verdict.bad{color:var(--hot)}
+@media (max-width:560px){ .calc table.chk td:last-child{white-space:normal} }
+.tdg .slot{fill:var(--surface);stroke:var(--ink);stroke-width:1.2}
+.tdg .fc{stroke:var(--hot);stroke-width:2.4;fill:none} .tdg .fc2{stroke:var(--hot);stroke-width:2;fill:none}
+.tdg .fat{fill:var(--hot);fill-opacity:.28} .tdg .front{fill:none;stroke:var(--hot);stroke-width:2}
+.tdg .ms path{stroke:var(--accent);stroke-width:1.6;stroke-dasharray:4 3} .tdg .mf path{stroke:var(--hot);stroke-width:1.4;stroke-dasharray:2 3}
+.tdg .arr{stroke:var(--muted);stroke-width:1}
+.tdg .hot{fill:var(--hot)}
+.form label[hidden]{display:none}
+figure.video{margin:14px 0 0}
+figure.video .vposter{display:block;position:relative;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:#fff}
+figure.video .vposter img{display:block;width:100%;height:auto}
+figure.video .vposter:hover{border-color:var(--accent)}
+figure.video .vplay{position:absolute;right:14px;bottom:14px;width:64px;height:46px;border-radius:12px;background:var(--hot);opacity:.92;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+figure.video .vposter:hover .vplay{opacity:1}
+figure.video .vplay::after{content:'';position:absolute;left:25px;top:14px;border-left:18px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent}
+figure.video figcaption{margin-top:6px;font-size:var(--s1);color:var(--muted)}
+label.ctl{grid-template-columns:minmax(0,1fr)} label.ctl select{width:100%;min-width:0}
+
+/* full-width introduction and author credit */
+header h1,header .lede{max-width:none}
+.credit{margin:0;font-size:.8125rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px}
+.credit b{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+  <div class="eyebrow"><a class="back" href="crack-tip-stress-intensity.html">← Stress intensity at the crack tip</a> · Experimental fracture mechanics</div>
+  <h1>Measuring <em>K<sub>IC</sub></em> in the laboratory</h1>
+  <p class="lede">How the plane-strain fracture toughness of a metal is measured on a standard specimen, following ASTM E399: choosing and sizing the specimen, growing a sharp fatigue pre-crack from a machined notch, recording the load–displacement curve, calculating the provisional value K<sub>Q</sub>, and checking whether it qualifies as a valid K<sub>IC</sub>. The theory behind each step is on the other pages and is linked where it is used.</p>
+  <p class="credit"><b>Author:</b> Dr Régis Kubler, Arts et Métiers Institute of Technology. Developed with the assistance of Claude Opus 5.5 (Anthropic), October 2026. Code: MIT · Documentation: CC BY 4.0.</p>
+  <nav class="toc" aria-label="Sections">
+    <a href="index.html"><b>⌂</b>Home</a>
+    <a href="#e1"><b>1</b>The procedure</a>
+    <a href="#e2"><b>2</b>Specimens and size</a>
+    <a href="#e3"><b>3</b>A sharp crack</a>
+    <a href="#e4"><b>4</b>The test record</a>
+    <a href="#e5"><b>5</b>K<sub>Q</sub> and validity</a>
+    <a href="#e6"><b>6</b>Invalid tests</a>
+    <a href="#refs"><b>§</b>References</a>
+  </nav>
+</header>
+
+<!-- 1 -->
+<section class="scene one" id="e1">
+  <div class="text">
+    <div class="step">Section 1 · The procedure</div>
+    <h2>From a block of material to a valid K<sub>IC</sub></h2>
+    <p>K<sub>IC</sub> is the critical value of the mode I stress intensity factor at which a crack starts to grow under plane strain and small-scale yielding (<a class="back" href="crack-tip-stress-intensity.html#s5">section 6 of the stress intensity page</a>). Measuring it means loading a cracked specimen whose K is known exactly as a function of the load, and detecting the load at which the crack starts to extend. The test method ASTM E399 <a class="cite" href="#ref1">[1]</a> fixes every step so that results from different laboratories can be compared. A result is first called K<sub>Q</sub>, a provisional value, and becomes K<sub>IC</sub> only if all the validity checks pass.</p>
+    <ol class="flow">
+      <li><b>Choose the specimen and orientation.</b> Compact C(T) or single-edge bend SE(B), with the crack plane identified by a code such as L-T (section 2).</li>
+      <li><b>Size it.</b> Estimate K<sub>IC</sub>, then make B and a larger than 2.5 (K<sub>IC</sub>/σ<sub>YS</sub>)² (section 2).</li>
+      <li><b>Machine the notch.</b> A narrow slot ending in a V or a chevron, with a root radius of 0.08 mm or less (section 3).</li>
+      <li><b>Fatigue pre-crack.</b> Grow a sharp crack from the notch at a low, controlled K<sub>max</sub> until a/W ≈ 0.5 (section 3).</li>
+      <li><b>Test.</b> Load at a controlled rate while recording load P against crack-mouth opening v with a clip gauge (section 4).</li>
+      <li><b>Analyse the record.</b> Draw the 5% secant line and find P<sub>Q</sub>; check P<sub>max</sub>/P<sub>Q</sub> ≤ 1.10 (section 4).</li>
+      <li><b>Measure the crack.</b> On the broken halves, average the crack length at three points of the front and check its shape (section 5).</li>
+      <li><b>Calculate K<sub>Q</sub> and check validity.</b> K<sub>Q</sub> from the specimen formula, then size and pre-cracking checks. If they all pass, K<sub>Q</sub> = K<sub>IC</sub> (sections 5 and 6).</li>
+    </ol>
+    <p class="note">This page follows the 1990 edition of E399 (reapproved 1997) <a class="cite" href="#ref1">[1]</a>, which is the document used in the course. Later editions keep the same procedure but revise some details, for example the size requirement now also applies to the ligament W − a. Check the edition required by your laboratory or customer <a class="cite" href="#ref2">[2]</a>.</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="scene" id="e2">
+  <div class="fig">
+    <canvas id="xs" aria-label="Standard E399 specimen (compact, disk-shaped compact, arc-shaped tension or bend) drawn to scale for the chosen toughness and yield strength"></canvas>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Specimen type"><button data-sp="ct" aria-pressed="true">C(T)</button><button data-sp="dc" aria-pressed="false">DC(T)</button><button data-sp="at" aria-pressed="false">A(T)</button><button data-sp="sb" aria-pressed="false">SE(B)</button></div>
+      <label class="ctl" style="flex:1 1 220px">Material<select id="xmat">
+        <option value="st">AISI 4340 steel · K ≈ 50, σys ≈ 1500 MPa</option>
+        <option value="al">Al 7075-T651 · K ≈ 29, σys ≈ 500 MPa</option>
+        <option value="ti" selected>Ti-6Al-4V · K ≈ 66, σys ≈ 880 MPa</option>
+        <option value="ps">Pressure-vessel steel, room temperature · K ≈ 200, σys ≈ 480 MPa</option>
+        <option value="cu">Custom (use the sliders)</option></select></label>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="xK"><span>Estimated K<sub>IC</sub></span> <output id="xKo"></output></label><input type="range" id="xK" min="5" max="250" step="1" value="66"></div>
+      <div class="ctl"><label for="xY"><span>Yield strength σ<sub>YS</sub></span> <output id="xYo"></output></label><input type="range" id="xY" min="150" max="2000" step="10" value="880"></div>
+    </div>
+    <div class="readout">
+      <div><span>2.5 (K/σ<sub>YS</sub>)²</span><strong id="oxm">—</strong></div>
+      <div><span>B = a ≥</span><strong id="oxB">—</strong></div>
+      <div><span>Width W</span><strong id="oxW">—</strong></div>
+      <div><span>Approx. mass</span><strong id="oxkg">—</strong></div>
+    </div>
+  </div>
+  <div class="text">
+    <div class="step">Section 2 · Specimens and size</div>
+    <h2>Five standard shapes, one size rule</h2>
+    <p>E399 allows five specimen types. The two used in nearly every laboratory are the <b>compact specimen C(T)</b>, a notched plate pulled through pins in two holes, and the <b>single-edge notched bend specimen SE(B)</b>, a beam in three-point bending with a span S = 4W. The other three are cut from round products. The <b>disk-shaped compact specimen DC(T)</b> is a C(T) machined from a bar or a forged disk (diameter D = 1.35W). The <b>arc-shaped tension specimen A(T)</b> is a notched ring segment from a tube or a hollow forging, pulled through two holes, with the crack growing radially from the outer surface (C-R orientation). The <b>arc-shaped bend specimen A(B)</b> is a ring segment in three-point bending (Annex A9). In the standard proportions the thickness is B = W/2 and the total crack length (notch plus fatigue crack) is a ≈ B, with 0.45 ≤ a/W ≤ 0.55. For each type, K is known from a calibration that combines the load with a geometry function of α = a/W, exactly the Y factors of <a class="back" href="crack-tip-stress-intensity.html#s3">section 4 of the stress intensity page</a>:</p>
+    <div class="eq wrap"><span class="eqno">(1)</span>SE(B): K = P S / (B W<sup>3/2</sup>) · f(α), &nbsp; f(α) = 3√α [1.99 − α(1 − α)(2.15 − 3.93α + 2.7α²)] / [2(1 + 2α)(1 − α)<sup>3/2</sup>]
+      <small>Accurate within 0.5% for any a/W when S/W = 4. f(0.50) = 2.66.</small>
+      <small class="src">Source: ASTM E399 Annex A3 <a class="cite" href="#ref1">[1]</a>; Srawley <a class="cite" href="#ref7">[7]</a></small></div>
+    <div class="eq wrap"><span class="eqno">(2)</span>C(T): K = P / (B W<sup>1/2</sup>) · f(α), &nbsp; f(α) = (2 + α)(0.886 + 4.64α − 13.32α² + 14.72α³ − 5.6α⁴) / (1 − α)<sup>3/2</sup>
+      <small>Accurate within 0.5% for 0.2 ≤ a/W ≤ 1. f(0.50) = 9.66. In SI units, P in kN and B, W in cm give K in MPa√m. W is measured from the load line (the hole centres), not from the front edge. The same formula drives the 3D view in <a class="back" href="crack-tip-stress-intensity.html#s6">section 7 of the stress intensity page</a>.</small>
+      <small class="src">Source: ASTM E399 Annex A4 <a class="cite" href="#ref1">[1]</a>; Srawley <a class="cite" href="#ref7">[7]</a></small></div>
+    <div class="eq wrap"><span class="eqno">(2b)</span>DC(T): K = P / (B W<sup>1/2</sup>) · f(α), &nbsp; f(α) = (2 + α)(0.76 + 4.8α − 11.58α² + 11.43α³ − 4.08α⁴) / (1 − α)<sup>3/2</sup>
+      <small>Accurate within 0.3% for 0.2 ≤ a/W ≤ 1. f(0.50) = 10.17. As for C(T), W and a are measured from the load line.</small>
+      <small class="src">Source: ASTM E399 Annex A6 <a class="cite" href="#ref1">[1]</a></small></div>
+    <div class="eq wrap"><span class="eqno">(2c)</span>A(T): K = P / (B W<sup>1/2</sup>) · [3X/W + 1.9 + 1.1α] · [1 + 0.25(1 − α)²(1 − r<sub>1</sub>/r<sub>2</sub>)] · f(α), &nbsp; f(α) = √α (3.74 − 6.30α + 6.32α² − 2.43α³) / (1 − α)<sup>3/2</sup>
+      <small>X is the offset of the load line from the inner surface (X/W = 0.5 for a half ring, 0 for the smallest segment), r<sub>1</sub> and r<sub>2</sub> are the inner and outer radii, and W = r<sub>2</sub> − r<sub>1</sub>. Here a and W are measured from the outer surface. f(0.50) = 3.73. Accurate within 1% for 0.45 ≤ a/W ≤ 0.55 with X/W = 0 or 0.5.</small>
+      <small class="src">Source: ASTM E399 Annex A5 <a class="cite" href="#ref1">[1]</a></small></div>
+    <p>The size rule makes sure that the plastic zone is small compared with the specimen, so that the tip is in plane strain and K controls it (small-scale yielding):</p>
+    <div class="eq"><span class="eqno">(3)</span>B, a ≥ 2.5 (K<sub>IC</sub> / σ<sub>YS</sub>)²
+      <small>σ<sub>YS</sub> is the 0.2% offset yield strength (ASTM E8 <a class="cite" href="#ref4">[4]</a>) at the test temperature and rate. 2.5(K/σ<sub>YS</sub>)² is about 50 times the plane-strain plastic zone (1/3π)(K/σ<sub>YS</sub>)². Since K<sub>IC</sub> is unknown before the test, use a conservative (high) estimate, or the table of minimum sizes by σ<sub>YS</sub>/E given in the standard: from 75 mm for σ<sub>YS</sub>/E ≈ 0.005 down to 6.5 mm for σ<sub>YS</sub>/E ≥ 0.010.</small>
+      <small class="src">Source: ASTM E399 §7.1 <a class="cite" href="#ref1">[1]</a>; Brown &amp; Srawley <a class="cite" href="#ref6">[6]</a></small></div>
+    <p>Change the material in the figure. A high-strength steel needs a specimen a few millimetres thick, while a tough pressure-vessel steel at room temperature would need a block close to a metre thick and weighing tonnes. That is why tough materials are tested with J or CTOD instead (<a class="back" href="#e6">section 6</a> and the <a class="back" href="crack-tip-j-integral.html#j7">J-integral page</a>).</p>
+    <p><b>Orientation.</b> Toughness depends on the direction of the crack relative to the rolling or forging direction. The code has two letters: the first is the direction normal to the crack plane, the second the direction of crack growth, with L the main working direction, T the transverse and S the short transverse (thickness) direction. A C(T) cut from a plate with its crack plane normal to L and growing along T is reported as C(T)(L-T).</p>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="scene" id="e3">
+  <div class="fig">
+    <canvas id="xf" aria-label="Animation of fatigue pre-cracking from a machined notch with the maximum stress intensity plotted against crack extension and the limits of the standard"></canvas>
+    <div class="controls">
+      <button id="xfp">Play</button>
+      <label class="ctl" style="flex:1 1 200px">Material<select id="xfm">
+        <option value="st">AISI 4340 steel · K_IC ≈ 50</option>
+        <option value="al">Al 7075-T651 · K_IC ≈ 29</option>
+        <option value="ti" selected>Ti-6Al-4V · K_IC ≈ 66</option></select></label>
+      <div class="seg" role="group" aria-label="Control mode"><button data-fc="load" aria-pressed="true">Load control</button><button data-fc="disp" aria-pressed="false">Displacement control</button></div>
+      <div class="ctl"><label for="xfR"><span>Load ratio R = K<sub>min</sub>/K<sub>max</sub></span> <output id="xfRo"></output></label><input type="range" id="xfR" min="-1" max="0.1" step="0.05" value="0.1"></div>
+    </div>
+    <div class="readout">
+      <div><span>Crack length a/W</span><strong id="oxa">—</strong></div>
+      <div><span>K<sub>max</sub> now</span><strong id="oxk">—</strong></div>
+      <div><span>Cycles so far</span><strong id="oxn">—</strong></div>
+      <div><span>Terminal K<sub>max</sub> limit</span><strong id="oxl">—</strong></div>
+    </div>
+    <span class="flag ok" id="xff"></span>
+  </div>
+  <div class="text">
+    <div class="step">Section 3 · A sharp crack</div>
+    <h2>Why the crack is grown in fatigue</h2>
+    <p>The whole of LEFM assumes an ideally sharp crack, whose tip radius is zero (<a class="back" href="crack-tip-stress-intensity.html#s0">section 1 of the stress intensity page</a>: as ρ → 0 the stress concentration K<sub>t</sub> becomes the K singularity). A machined notch, even one cut by wire erosion or a razor, has a root radius of tens of micrometres. The material at a blunt notch must be loaded further before it fractures, so a notched specimen overestimates the toughness. A fatigue crack grown from the notch has a tip radius set only by the tiny plastic zone of the last cycles, which is as close to an ideal crack as can be made. The standard therefore requires a fatigue <b>pre-crack</b> <a class="cite" href="#ref1">[1]</a>.</p>
+    <svg class="tdg wide" viewBox="0 0 600 150" role="img" aria-label="Three crack starter notches: straight-through V-notch in side view, chevron notch seen on the crack plane with its point at mid-thickness and the fatigue crack front spreading from it to both faces, and drilled hole with a sharp stress raiser in side view">
+      <g transform="translate(10,10)">
+        <rect class="mat" x="0" y="20" width="180" height="100"/>
+        <path class="slot" d="M0 63 H112 L128 70 L112 77 H0 Z"/>
+        <path class="fc" d="M128 70 H162"/>
+        <text class="mut" x="90" y="12" text-anchor="middle">V-notch, side view</text>
+        <text class="mut" x="90" y="140" text-anchor="middle">root radius ≤ 0.08 mm</text>
+      </g>
+      <g transform="translate(210,10)">
+        <rect class="mat" x="0" y="20" width="180" height="100"/>
+        <path class="fat" d="M88 20 L118 70 L88 120 L104 120 Q150 70 104 20 Z"/>
+        <path class="slot" d="M0 20 H88 L118 70 L88 120 H0 Z"/>
+        <path class="front" d="M104 20 Q150 70 104 120"/>
+        <path class="arr" d="M8 26 V114 M5 29 L8 23 L11 29 M5 111 L8 117 L11 111"/>
+        <text class="mut" x="14" y="74">B</text>
+        <text class="mut" x="44" y="74">notch</text>
+        <text class="mut" x="90" y="12" text-anchor="middle">chevron, crack-plane view</text>
+        <text class="mut" x="90" y="140" text-anchor="middle">root radius ≤ 0.25 mm</text>
+      </g>
+      <g transform="translate(410,10)">
+        <rect class="mat" x="0" y="20" width="180" height="100"/>
+        <path class="slot" d="M0 64 H96 V76 H0 Z"/>
+        <circle class="slot" cx="106" cy="70" r="14"/>
+        <path class="slot" d="M118 66 L130 70 L118 74 Z"/>
+        <path class="fc" d="M130 70 H160"/>
+        <text class="mut" x="90" y="12" text-anchor="middle">drilled hole, side view</text>
+        <text class="mut" x="90" y="140" text-anchor="middle">crack ≥ 0.5 D beyond the hole</text>
+      </g>
+    </svg>
+    <p><b>The notch.</b> The crack starter can be a straight-through slot ending in a V (root radius 0.08 mm or less), a chevron (radius up to 0.25 mm), or a slot ending in a drilled hole with a small sharp stress raiser. The chevron is cut by two saw or cutter passes at an angle, one from each face, so that on the crack plane the notch root is a V whose point lies at mid-thickness (included angle 120° at most, centred on the mid-plane within 0.005W). The ligament is very narrow at the point, so the stress there is high and the fatigue crack starts at a low load, then widens as it grows. Pre-cracking must continue until the crack has broken out of the chevron on both faces. The notch must be square to the faces within 2°.</p>
+    <p><b>The pre-crack.</b> The specimen, fully heat treated, is cycled in the same fixture as the test, usually with a sine wave at the highest practical frequency (no frequency effect is known up to 100 Hz in air). The fatigue crack must extend at least 2.5% of W, and at least 1.3 mm, beyond a straight notch on both faces, and the total crack length must end between 0.45W and 0.55W. Growth follows the Paris law, so the number of cycles depends strongly on K:</p>
+    <div class="eq wrap"><span class="eqno">(4)</span>da/dN = C ΔK<sup>m</sup>, &nbsp; ΔK = K<sub>max</sub> − K<sub>min</sub> = (1 − R) K<sub>max</sub>
+      <small>m ≈ 3 for most metals. The standard allows R between −1 and +0.1; a more negative R grows the crack faster but needs fixtures that push as well as pull. Typical pre-cracking takes 10⁴ to 10⁶ cycles, most of them to initiate the crack at the notch root. Cycle counts in the figure use illustrative Paris constants.</small>
+      <small class="src">Source: Paris &amp; Erdogan <a class="cite" href="#ref8">[8]</a>; ASTM E647 <a class="cite" href="#ref5">[5]</a></small></div>
+    <p><b>Controlling K<sub>max</sub>.</b> A high K<sub>max</sub> would leave a large plastic zone and residual compressive stresses at the tip, which blunt it and raise the measured toughness. The standard sets three limits:</p>
+    <div class="eq wrap"><span class="eqno">(5)</span>K<sub>max</sub> ≤ 0.8 K<sub>IC,est</sub> (start), &nbsp; then over the last 2.5% of a: &nbsp; K<sub>max</sub> ≤ 0.6 K<sub>Q</sub> &nbsp;and&nbsp; K<sub>max</sub>/E ≤ 0.00032 √m
+      <small>The terminal stage covers at least 0.0125W of crack growth: draw two pencil lines on each face, one at the minimum final length and one 2.5% short of it, and reduce the load when the crack trace reaches the first one (97.5% of the final length). If pre-cracking is done at a temperature T₁ and the test at T₂, the limit becomes K<sub>max</sub> ≤ 0.6 (σ<sub>YS1</sub>/σ<sub>YS2</sub>) K<sub>Q</sub>. The 0.6 K<sub>Q</sub> condition can only be checked after the test, so it is set from the estimated K<sub>IC</sub>.</small>
+      <small class="src">Source: ASTM E399 Annex A2 <a class="cite" href="#ref1">[1]</a></small></div>
+    <p>Play the figure. Under <b>load control</b> K<sub>max</sub> rises as the crack grows (f(α) increases), so the load is stepped down for the terminal stage. Under <b>displacement control</b> the specimen becomes more compliant as the crack grows and K<sub>max</sub> falls by itself. For the titanium alloy the stiffness limit K<sub>max</sub>/E governs; for the aluminium alloy, 0.6 K<sub>Q</sub>. Watch both faces of a real specimen: if the crack starts on one side only, stop and turn the specimen around in the fixture. The crack length can be followed without stopping from the specimen compliance v/P <a class="cite" href="#ref9">[9]</a>, using the compliance equations given in the annexes of the standard.</p>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="scene" id="e4">
+  <div class="fig">
+    <canvas id="xr" aria-label="Load versus crack mouth opening record with the 5 percent secant line, P5, PQ and Pmax"></canvas>
+    <div class="controls">
+      <button id="xrp">Play</button>
+      <div class="ctl"><label for="xrd"><span>Nonlinearity before fracture (P<sub>max</sub>/P<sub>5</sub>)</span> <output id="xrdo"></output></label><input type="range" id="xrd" min="0.85" max="1.35" step="0.01" value="1.05"></div>
+      <label class="ctl" style="flex:0 1 auto;display:flex;gap:6px;align-items:center"><input type="checkbox" id="xrpop"> Pop-in</label>
+    </div>
+    <div class="readout">
+      <div><span>Record type</span><strong id="oxt">—</strong></div>
+      <div><span>P<sub>5</sub></span><strong id="ox5">—</strong></div>
+      <div><span>P<sub>Q</sub></span><strong id="oxq">—</strong></div>
+      <div><span>P<sub>max</sub>/P<sub>Q</sub></span><strong id="oxr">—</strong></div>
+    </div>
+    <span class="flag ok" id="xrf"></span>
+    <figure class="video" id="xvid">
+      <a class="vposter" href="https://www.youtube.com/watch?v=qY26fY8MoEM" target="_blank" rel="noopener" aria-label="Watch the C(T) test on a Zwick/Roell machine on YouTube">
+        <img src="assets/zwick-ct-test.jpg" width="1277" height="650" loading="lazy" alt="Zwick/Roell HA 250 servo-hydraulic testing machine set up for a C(T) test: hydraulically adjustable upper crosshead, alignment fixture and 250 kN load cell, hydraulic wedge grips holding the C(T) specimen clevises, 250 kN hydrostatic actuator with 100 mm stroke, and remote control">
+        <span class="vplay" aria-hidden="true"></span>
+      </a>
+      <figcaption>A real C(T) test on a Zwick/Roell HA 250 servo-hydraulic machine. Click the image to <a class="back" href="https://www.youtube.com/watch?v=qY26fY8MoEM" target="_blank" rel="noopener">watch the video on YouTube</a>.</figcaption>
+    </figure>
+  </div>
+  <div class="text">
+    <div class="step">Section 4 · The test record</div>
+    <h2>Finding the load at the start of crack growth</h2>
+    <p>The pre-cracked specimen is loaded in a clevis (C(T)) or a three-point bend fixture with rolling supports (SE(B)), so that the loading matches the K calibration. A double-cantilever <b>clip gauge</b> seated on knife edges at the crack mouth measures the opening v. Load is applied so that K increases at 0.55 to 2.75 MPa√m/s, about 0.3 to 1.7 kN/s for a standard 25 mm thick specimen, and the record P–v is plotted with an initial slope between 0.7 and 1.5 on the chart. At least three tests per material condition are recommended.</p>
+    <p>In a perfectly elastic specimen with a stationary crack the record would be a straight line. It bends because of plasticity at the tip and because the crack starts to grow, both of which increase the compliance. E399 defines the start of crack growth as an apparent crack extension of about 2%, which for standard specimens corresponds to a 5% drop in the secant slope:</p>
+    <div class="eq wrap"><span class="eqno">(6)</span>secant OP<sub>5</sub>: slope (P/v)<sub>5</sub> = 0.95 (P/v)<sub>0</sub>; &nbsp; P<sub>Q</sub> = P<sub>5</sub>, or the highest load before P<sub>5</sub> if it is larger; &nbsp; valid only if P<sub>max</sub>/P<sub>Q</sub> ≤ 1.10
+      <small>(P/v)<sub>0</sub> is the slope of the initial linear part. Ignore the slight nonlinearity often seen at the very start, and remove it if needed by a preliminary load–unload below the final pre-cracking K. Type I: smooth curve, P<sub>Q</sub> = P<sub>5</sub>. Type II: a small pop-in (a sudden burst of crack growth arrested by the surrounding material) before P<sub>5</sub>, P<sub>Q</sub> = pop-in load. Type III: fracture before the secant is reached, P<sub>Q</sub> = P<sub>max</sub>.</small>
+      <small class="src">Source: ASTM E399 §9.1 <a class="cite" href="#ref1">[1]</a></small></div>
+    <p>The P<sub>max</sub>/P<sub>Q</sub> ≤ 1.10 check rejects records where the specimen carries much more load after P<sub>Q</sub>. Then the nonlinearity comes from extensive plasticity rather than from the start of crack growth, and K<sub>Q</sub> would have no relation to K<sub>IC</sub>. Move the slider in the figure to see the three record types and the check change.</p>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="scene" id="e5">
+  <div class="fig">
+    <div class="calc" id="xcalc"></div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Specimen"><button data-cs="ct" aria-pressed="true">C(T)</button><button data-cs="dc" aria-pressed="false">DC(T)</button><button data-cs="at" aria-pressed="false">A(T)</button><button data-cs="sb" aria-pressed="false">SE(B), S = 4W</button></div>
+      <div class="seg" role="group" aria-label="Example"><button data-ex="ok">Valid steel test</button><button data-ex="al">Aluminium, too thin</button></div>
+    </div>
+    <div class="form" id="xform">
+      <label><span>W, mm</span><input type="number" id="iW" step="0.01"></label>
+      <label><span>B, mm</span><input type="number" id="iB" step="0.01"></label>
+      <label><span>Notch length a<sub>n</sub>, mm</span><input type="number" id="ian" step="0.01"></label>
+      <label><span>a at ¼ B, mm</span><input type="number" id="ia1" step="0.01"></label>
+      <label><span>a at ½ B, mm</span><input type="number" id="ia2" step="0.01"></label>
+      <label><span>a at ¾ B, mm</span><input type="number" id="ia3" step="0.01"></label>
+      <label><span>a on face 1, mm</span><input type="number" id="is1" step="0.01"></label>
+      <label><span>a on face 2, mm</span><input type="number" id="is2" step="0.01"></label>
+      <label><span>P<sub>Q</sub>, kN</span><input type="number" id="iPQ" step="0.01"></label>
+      <label><span>P<sub>max</sub>, kN</span><input type="number" id="iPm" step="0.01"></label>
+      <label><span>σ<sub>YS</sub>, MPa</span><input type="number" id="isy" step="1"></label>
+      <label><span>E, GPa</span><input type="number" id="iE" step="1"></label>
+      <label><span>Final pre-crack K<sub>max</sub>, MPa√m</span><input type="number" id="iKf" step="0.1"></label>
+      <label class="atonly" hidden><span>A(T) offset X/W</span><input type="number" id="iXW" step="0.05" value="0.5"></label>
+      <label class="atonly" hidden><span>A(T) radius ratio r<sub>1</sub>/r<sub>2</sub></span><input type="number" id="iRR" step="0.05" value="0.5"></label>
+    </div>
+  </div>
+  <div class="text">
+    <div class="step">Section 5 · K<sub>Q</sub> and validity</div>
+    <h2>Calculate K<sub>Q</sub>, then check everything</h2>
+    <p>After the test the specimen is broken open, if it has not already fractured, and the crack front is measured on the fracture surface. The fatigue pre-crack is smooth and often darker or heat tinted, so its front is easy to see against the final fracture.</p>
+    <svg class="tdg wide" viewBox="0 0 600 190" role="img" aria-label="Fracture surface of a specimen showing the machined notch, the curved fatigue pre-crack front and the three positions where the crack length is measured">
+      <rect class="mat" x="120" y="20" width="420" height="140"/>
+      <rect class="slot" x="120" y="20" width="160" height="140"/>
+      <path class="fat" d="M280 20 C 300 20, 312 22, 318 40 C 322 60, 324 80, 324 90 C 324 100, 322 120, 318 140 C 312 158, 300 160, 280 160 Z"/>
+      <path class="front" d="M300 20 C 312 22, 318 40, 322 60 C 324 80, 324 100, 322 120 C 318 140, 312 158, 300 160"/>
+      <g class="ms"><path d="M120 55 H321"/><path d="M120 90 H324"/><path d="M120 125 H321"/></g>
+      <g class="mf"><path d="M120 24 H300"/><path d="M120 156 H300"/></g>
+      <text class="mut" x="200" y="111" text-anchor="middle">machined notch</text>
+      <text class="mut" x="430" y="92" text-anchor="middle">final fracture (overload)</text>
+      <text class="lbl acc" x="20" y="59">a₁ at B/4</text><text class="lbl acc" x="20" y="94">a₂ at B/2</text><text class="lbl acc" x="20" y="129">a₃ at 3B/4</text>
+      <text class="lbl hot" x="20" y="28">face 1</text><text class="lbl hot" x="20" y="166">face 2</text>
+      <text class="mut" x="330" y="14">fatigue pre-crack front</text>
+      <path class="arr" d="M110 176 H540"/><text class="mut" x="330" y="188" text-anchor="middle">crack growth direction, ligament W − a</text>
+      <path class="arr" d="M580 20 V160"/><text class="mut" x="566" y="94" text-anchor="end">B</text>
+    </svg>
+    <p><b>Crack length.</b> a is measured to 0.5% at the centre of the front and midway between the centre and each face (B/4, B/2, 3B/4), and the average of these three is used in eqs. (1) to (2c). The front must be reasonably straight: any two of the three readings within 10% of the average, the two surface readings within 15% of the average and within 10% of each other, no part of the front closer to the notch than 2.5% W or 1.3 mm, and the crack plane parallel to the specimen within 10°. A strongly curved front means the stress state through the thickness was not uniform during pre-cracking, which is the K(z) effect of <a class="back" href="crack-tip-stress-intensity.html#s6">section 7 of the stress intensity page</a>.</p>
+    <div class="eq wrap"><span class="eqno">(7)</span>K<sub>Q</sub> = K(P<sub>Q</sub>, a, B, W), &nbsp; K<sub>IC</sub> = K<sub>Q</sub> if all checks pass
+      <small>The checks in the calculator: a/W in 0.45–0.55 (§7.3.2.1), pre-crack length (§7.3.2.2), crack-front shape (§8.2.2), P<sub>max</sub>/P<sub>Q</sub> ≤ 1.10 (§9.1.2), B and a ≥ 2.5(K<sub>Q</sub>/σ<sub>YS</sub>)² (§9.1.3), terminal pre-crack K<sub>max</sub> ≤ 0.6 K<sub>Q</sub> and K<sub>max</sub>/E ≤ 0.00032 √m (Annex A2).</small>
+      <small class="src">Source: ASTM E399 §8–9, Annexes A2–A4 <a class="cite" href="#ref1">[1]</a></small></div>
+    <p>Enter your own measurements, or pick an example. The result is reported as K<sub>IC</sub>, or as K<sub>Q</sub> "invalid according to section(s) … of ASTM E399", together with the specimen code and orientation, the pre-cracking K<sub>max</sub> and the cycles of the terminal stage, the three crack lengths, the test temperature and humidity, the loading rate, the record, P<sub>max</sub>/P<sub>Q</sub> and the fracture appearance.</p>
+    <p class="note"><b>Fracture appearance.</b> Note how much of the fracture surface is flat and how much is slanted shear lips near the faces. A fully flat fracture is plane strain; wide shear lips mean that the faces were close to plane stress, as in the through-thickness model of section 7 of the stress intensity page. E399 asks for the proportion of oblique fracture (B − f)/B to be reported.</p>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="scene one" id="e6">
+  <div class="text">
+    <div class="step">Section 6 · Invalid tests</div>
+    <h2>When K<sub>Q</sub> is not K<sub>IC</sub></h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Check that failed</th><th>What it means</th><th>What to do</th></tr></thead>
+      <tbody>
+        <tr><th>B or a &lt; 2.5(K<sub>Q</sub>/σ<sub>YS</sub>)²</th><td>The plastic zone was too large for plane strain and small-scale yielding (<a class="back" href="crack-tip-stress-intensity.html#s5">stress intensity page, section 6</a>).</td><td>Retest with a larger specimen, at least 1.5 times the size, estimated from K<sub>Q</sub>. If the material is not available that thick, a valid K<sub>IC</sub> cannot be measured.</td></tr>
+        <tr><th>P<sub>max</sub>/P<sub>Q</sub> &gt; 1.10</th><td>Extensive plasticity before crack growth; the 5% secant did not detect crack initiation.</td><td>Larger specimen, or an elastic–plastic test: J<sub>Ic</sub> or CTOD by ASTM E1820 <a class="cite" href="#ref3">[3]</a>, then K<sub>Jc</sub> = √(E′J<sub>c</sub>) (<a class="back" href="crack-tip-j-integral.html#j5">J-integral page, section 5</a> and <a class="back" href="crack-tip-j-integral.html#j7">section 7</a>).</td></tr>
+        <tr><th>Pre-crack K<sub>max</sub> &gt; 0.6 K<sub>Q</sub> or K<sub>max</sub>/E &gt; 0.00032 √m</th><td>The pre-crack tip was blunted by a large fatigue plastic zone; K<sub>Q</sub> is probably too high.</td><td>Pre-crack the next specimen with a lower terminal load.</td></tr>
+        <tr><th>a/W outside 0.45–0.55, short pre-crack, curved front</th><td>The K calibration or the crack sharpness cannot be relied on.</td><td>Improve the notch and the alignment during pre-cracking; turn the specimen if the crack starts on one face only.</td></tr>
+      </tbody></table></div>
+    <p>Even an invalid test gives useful information. E399 asks for the <b>specimen strength ratio</b> R<sub>sx</sub>, which compares the maximum load with the plastic-collapse load of the ligament: R<sub>sc</sub> = 2P<sub>max</sub>(2W + a) / [B(W − a)² σ<sub>YS</sub>] for C(T) and DC(T), R<sub>sa</sub> = 2P<sub>max</sub>(3X + 2W + a) / [B(W − a)² σ<sub>YS</sub>] for A(T), and R<sub>sb</sub> = 6P<sub>max</sub>W / [B(W − a)² σ<sub>YS</sub>] for SE(B). It ranks the toughness of materials tested with the same specimen size. For materials too tough for a valid K<sub>IC</sub>, J and the J-dominance conditions of the <a class="back" href="crack-tip-j-integral.html#j6">J-integral page, section 6</a> take over: the size requirement drops from 2.5(K/σ<sub>YS</sub>)² = 2.5 E′J/σ<sub>YS</sub>², several hundred times J/σ<sub>YS</sub>, to 10 J<sub>Q</sub>/σ<sub>Y</sub> in ASTM E1820 <a class="cite" href="#ref3">[3]</a>. The specimen K calibrations of eqs. (1) to (2c) can also be checked with finite elements (<a class="back" href="crack-tip-fe-fracture.html">K and J in FE software</a>).</p>
+    <p class="note">Numbers and limits are taken from ASTM E399-90 (reapproved 1997) for teaching. They are summarised, not quoted; use the full standard, in its current edition, for actual testing.</p>
+  </div>
+</section>
+
+<section class="refs" id="refs">
+  <h2>References</h2>
+  <ol>
+    <li id="ref1">ASTM E399-90 (reapproved 1997). Standard test method for plane-strain fracture toughness of metallic materials. ASTM International, West Conshohocken.</li>
+    <li id="ref2">ASTM E399. Standard test method for linear-elastic plane-strain fracture toughness of metallic materials, current edition. ASTM International.</li>
+    <li id="ref3">ASTM E1820. Standard test method for measurement of fracture toughness. ASTM International.</li>
+    <li id="ref4">ASTM E8/E8M. Standard test methods for tension testing of metallic materials. ASTM International.</li>
+    <li id="ref5">ASTM E647. Standard test method for measurement of fatigue crack growth rates. ASTM International.</li>
+    <li id="ref6">W. F. Brown, J. E. Srawley (1966). <i>Plane Strain Crack Toughness Testing of High Strength Metallic Materials</i>. ASTM STP 410, Philadelphia.</li>
+    <li id="ref7">J. E. Srawley (1976). Wide range stress intensity factor expressions for ASTM E 399 standard fracture toughness specimens. <i>International Journal of Fracture</i> 12, 475–476.</li>
+    <li id="ref8">P. C. Paris, F. Erdogan (1963). A critical analysis of crack propagation laws. <i>Journal of Basic Engineering</i> 85, 528–534.</li>
+    <li id="ref9">A. Saxena, S. J. Hudak (1978). Review and extension of compliance information for common crack growth specimens. <i>International Journal of Fracture</i> 14, 453–468.</li>
+    <li id="ref10">T. L. Anderson (2017). <i>Fracture Mechanics: Fundamentals and Applications</i>, 4th ed. CRC Press, Boca Raton.</li>
+    <li id="ref11">G. R. Irwin (1957). Analysis of stresses and strains near the end of a crack traversing a plate. <i>Journal of Applied Mechanics</i> 24, 361–364.</li>
+  </ol>
+  <p class="note">Equation numbers are local to this page. Use the back link at the top to return to the stress intensity page.</p>
+</section>
+
+<footer>The specimen drawing is to scale with the standard proportions. The pre-cracking cycle counts use illustrative Paris-law constants (m = 3). The test record is synthetic. The calculator applies the E399-90 formulas and checks.</footer>
+</div>
+
+<script>
+(() => {
+const R = document.documentElement;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MONO = '"IBM Plex Mono", ui-monospace, Menlo, monospace';
+const SERIF = 'Spectral, Georgia, serif';
+const C = {};
+let LUTP, LUTN;
+const hex = h => { h = h.replace('#',''); if (h.length===3) h = [...h].map(c=>c+c).join(''); return [0,2,4].map(i=>parseInt(h.substr(i,2),16)); };
+function ramp(stops, n){ const o=new Uint8ClampedArray(n*3);
+  for(let i=0;i<n;i++){ const t=i/(n-1)*(stops.length-1), k=Math.min(stops.length-2,Math.floor(t)), f=t-k;
+    for(let c=0;c<3;c++) o[i*3+c]=stops[k][c]+(stops[k+1][c]-stops[k][c])*f; } return o; }
+function readTheme(){ const s=getComputedStyle(R);
+  ['bg','surface','ink','muted','rule','accent','hot','plate','cool','heat1','heat2','heat3'].forEach(k=>C[k]=s.getPropertyValue('--'+k).trim());
+  LUTP = ramp([C.plate,C.heat1,C.heat2,C.heat3].map(hex),256);
+  LUTN = ramp([C.plate,C.cool].map(hex),256);
+  scenes.forEach(s=>s.cv && (s.cv.dirty=true));
+}
+const scenes = [];
+// rainbow (jet) scale: blue = minimum, red = maximum
+const LUTR = ramp([[0,0,143],[0,0,255],[0,255,255],[255,255,0],[255,0,0],[128,0,0]],256);
+function paintT(data,p,t){ const i=Math.round(clamp(t,0,1)*255)*3; data[p]=LUTR[i]; data[p+1]=LUTR[i+1]; data[p+2]=LUTR[i+2]; data[p+3]=255; }
+// signed value s in [-1,1] -> rgb into data at index p
+function paint(data,p,s){ const lut = s>=0?LUTP:LUTN; const i = Math.min(255, Math.round(Math.abs(s)*255))*3;
+  data[p]=lut[i]; data[p+1]=lut[i+1]; data[p+2]=lut[i+2]; data[p+3]=255; }
+
+function makeCanvas(el){ const ctx=el.getContext('2d'); const o={el,ctx,w:0,h:0,dirty:true};
+  const fit=()=>{ const w=el.clientWidth, h=el.clientHeight, d=Math.min(2,window.devicePixelRatio||1);
+    if(!w||!h) return; el.width=Math.round(w*d); el.height=Math.round(h*d); o.w=w; o.h=h; ctx.setTransform(d,0,0,d,0,0); o.dirty=true; };
+  new ResizeObserver(fit).observe(el); fit(); return o; }
+
+const ease = t => t<0?0:t>1?1:t*t*(3-2*t);
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const fmt = (v,d=1) => (Math.abs(v)>=1e4? v.toExponential(2) : v.toFixed(d));
+function niceTicks(min,max,n){ const step0=(max-min)/n, mag=Math.pow(10,Math.floor(Math.log10(step0))), f=step0/mag;
+  const step=(f<1.5?1:f<3?2:f<7?5:10)*mag, out=[]; for(let v=Math.ceil(min/step-1e-9)*step; v<=max+1e-9; v+=step) out.push(+v.toFixed(10)); return out; }
+function axes(ctx,b,xd,yd,o={}){
+  const X=v=>b.x+(v-xd[0])/(xd[1]-xd[0])*b.w, Y=v=>b.y+b.h-(v-yd[0])/(yd[1]-yd[0])*b.h;
+  ctx.save(); ctx.lineWidth=1; ctx.font='11px '+MONO; ctx.fillStyle=C.muted;
+  const xt=o.xt||niceTicks(xd[0],xd[1],o.nx||5), yt=o.yt||niceTicks(yd[0],yd[1],o.ny||4);
+  ctx.strokeStyle=C.rule; ctx.globalAlpha=.7;
+  xt.forEach(v=>{ctx.beginPath();ctx.moveTo(X(v)+.5,b.y);ctx.lineTo(X(v)+.5,b.y+b.h);ctx.stroke();});
+  yt.forEach(v=>{ctx.beginPath();ctx.moveTo(b.x,Y(v)+.5);ctx.lineTo(b.x+b.w,Y(v)+.5);ctx.stroke();});
+  ctx.globalAlpha=1; ctx.strokeStyle=C.muted; ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(b.x,b.y+b.h); ctx.lineTo(b.x+b.w,b.y+b.h); ctx.stroke();
+  ctx.textAlign='center'; ctx.textBaseline='top'; xt.forEach(v=>ctx.fillText(o.xf?o.xf(v):String(v),X(v),b.y+b.h+4));
+  ctx.textAlign='right'; ctx.textBaseline='middle'; yt.forEach(v=>ctx.fillText(o.yf?o.yf(v):String(v),b.x-5,Y(v)));
+  if(o.xl){ctx.textAlign='right';ctx.textBaseline='top';ctx.fillText(o.xl,b.x+b.w,b.y+b.h+18);}
+  if(o.yl){ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText(o.yl,b.x+2,b.y-5);}
+  ctx.restore(); return {X,Y};
+}
+function arrow(ctx,x1,y1,x2,y2,hs=5){ const a=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-hs*Math.cos(a-.45),y2-hs*Math.sin(a-.45));ctx.lineTo(x2-hs*Math.cos(a+.45),y2-hs*Math.sin(a+.45));ctx.closePath();ctx.fill(); }
+function label(ctx,txt,x,y,o={}){ ctx.save(); ctx.font=(o.size||12)+'px '+(o.font||MONO); ctx.textAlign=o.align||'left'; ctx.textBaseline=o.base||'middle';
+  if(o.bg){ const m=ctx.measureText(txt), w=m.width+10, h=(o.size||12)+8; let bx=x-(ctx.textAlign==='center'?w/2:ctx.textAlign==='right'?w-5:5);
+    ctx.fillStyle=C.surface; ctx.globalAlpha=.9; ctx.fillRect(bx,y-h/2,w,h); ctx.globalAlpha=1; }
+  ctx.fillStyle=o.color||C.ink; ctx.fillText(txt,x,y); ctx.restore(); }
+function playBtn(btn,s){ const set=()=>btn.textContent=s.playing?'Pause':'Play'; btn.onclick=()=>{s.playing=!s.playing;s.forcePlay=true;set();}; set(); s.syncBtn=set; }
+
+/* ---------- shared: E399 geometry functions ---------- */
+const fCT=a=>(2+a)*(0.886+4.64*a-13.32*a*a+14.72*a**3-5.6*a**4)/Math.pow(1-a,1.5);
+const fSB=a=>3*Math.sqrt(a)*(1.99-a*(1-a)*(2.15-3.93*a+2.7*a*a))/(2*(1+2*a)*Math.pow(1-a,1.5));
+const fDC=a=>(2+a)*(0.76+4.8*a-11.58*a*a+11.43*a**3-4.08*a**4)/Math.pow(1-a,1.5);
+const fAT=a=>Math.sqrt(a)/Math.pow(1-a,1.5)*(3.74-6.30*a+6.32*a*a-2.43*a**3);   // times [3X/W + 1.9 + 1.1a/W][1 + 0.25(1 - a/W)^2(1 - r1/r2)]
+const qCT=a=>19.75/((1-a)*(1-a))*(0.5+0.192*a+1.385*a*a-2.919*a**3+1.842*a**4);   // C(T) mouth compliance E'B v/P
+const MAT={st:{K:50,sy:1500,E:210,rho:7.85,C:5e-12,name:'AISI 4340 steel'},al:{K:29,sy:500,E:71.7,rho:2.81,C:2e-11,name:'Al 7075-T651'},
+  ti:{K:66,sy:880,E:114,rho:4.43,C:8e-12,name:'Ti-6Al-4V'},ps:{K:200,sy:480,E:205,rho:7.85,C:5e-12,name:'pressure-vessel steel'}};
+const fmtL=mm=>mm>=1000?(mm/1000).toFixed(2)+' m':mm>=100?mm.toFixed(0)+' mm':mm>=10?mm.toFixed(1)+' mm':mm.toFixed(2)+' mm';
+const fmtKg=kg=>kg>=1000?(kg/1000).toFixed(1)+' t':kg>=1?kg.toFixed(kg>=100?0:1)+' kg':(kg*1000).toFixed(0)+' g';
+
+/* ---------- Section 2: specimen to scale ---------- */
+{
+  const s={cv:makeCanvas(document.getElementById('xs')),t:0,playing:false,visible:false};
+  scenes.push(s);
+  const el=id=>document.getElementById(id), sK=el('xK'), sY=el('xY'), mat=el('xmat');
+  let SP='ct';
+  document.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{ SP=b.dataset.sp; document.querySelectorAll('[data-sp]').forEach(o=>o.setAttribute('aria-pressed',String(o===b))); });
+  const setMat=()=>{ const m=MAT[mat.value]; if(m){ sK.value=m.K; sY.value=m.sy; } };
+  mat.addEventListener('change',setMat); setMat();
+  [sK,sY].forEach(i=>i.addEventListener('input',()=>{ const m=MAT[mat.value]; if(m && (+sK.value!==m.K || +sY.value!==m.sy)) mat.value='cu'; }));
+  const TAB=[[0.0050,75],[0.0057,63],[0.0062,50],[0.0065,44],[0.0068,38],[0.0071,32],[0.0075,25],[0.0080,20],[0.0085,12.5],[0.0100,6.5]];
+  // outlines in units of W; y = 0 on the crack plane. a is measured from aRef, W from wRef.
+  const arcPts=(cx,cy,r,t0,t1,n)=>{ const p=[]; for(let i=0;i<=n;i++){ const t=t0+(t1-t0)*i/n; p.push([cx+r*Math.cos(t),cy+r*Math.sin(t)]); } return p; };
+  const tD=Math.atan2(0.3536,-0.575);
+  const GEO={
+    ct:{name:'C(T)',out:[[-0.25,-0.6],[1,-0.6],[1,0.6],[-0.25,0.6]],holes:[[0,-0.275],[0,0.275]],hr:0.125,mouth:-0.25,aRef:0,load:0},
+    dc:{name:'DC(T)',out:arcPts(0.325,0,0.675,-tD,tD,60),holes:[[0,-0.275],[0,0.275]],hr:0.125,mouth:-0.25,aRef:0,load:0},
+    at:{name:'A(T)',out:arcPts(0,0,2,-Math.PI/2,-3*Math.PI/2,60).concat(arcPts(0,0,1,Math.PI/2,3*Math.PI/2,40)),holes:[[-0.5,-1.4],[-0.5,1.4]],hr:0.125,mouth:-2,aRef:-2,load:-0.5}};
+  const area=pts=>{ let A=0; for(let i=0;i<pts.length;i++){ const [x1,y1]=pts[i],[x2,y2]=pts[(i+1)%pts.length]; A+=x1*y2-x2*y1; } return Math.abs(A)/2; };
+  s.draw=()=>{ const {ctx,w,h}=s.cv; if(!w) return;
+    const K=+sK.value, sy=+sY.value, m=MAT[mat.value]||{E:200,rho:7.85};
+    el('xKo').textContent=K+' MPa√m'; el('xYo').textContent=sy+' MPa';
+    const B=2.5*Math.pow(K/sy,2)*1000, W=2*B;   // mm
+    const g=GEO[SP];
+    const vol=(g?area(g.out)-g.holes.length*Math.PI*g.hr*g.hr:4.5)*W*W*B;
+    const kg=m.rho*vol/1e6;
+    el('oxm').textContent=fmtL(B); el('oxB').textContent=fmtL(B); el('oxW').textContent=fmtL(W); el('oxkg').textContent=fmtKg(kg);
+    ctx.clearRect(0,0,w,h); ctx.fillStyle=C.surface; ctx.fillRect(0,0,w,h);
+    const pad=24, top=56, bot=46;
+    let x0,x1,y0,y1;
+    if(g){ x0=Math.min(...g.out.map(p=>p[0])); x1=Math.max(...g.out.map(p=>p[0])); y0=Math.min(...g.out.map(p=>p[1])); y1=Math.max(...g.out.map(p=>p[1])); }
+    else { x0=-2.25; x1=2.25; y0=0; y1=1; }
+    const gw=x1-x0, gh=y1-y0;
+    const sc=Math.min((w-2*pad-90)/gw,(h-top-bot)/gh);  // px per W
+    const ox=pad+(w-2*pad-90-gw*sc)/2, oy=top+(h-top-bot-gh*sc)/2;
+    const P=(x,y)=>[ox+(x-x0)*sc,oy+(y-y0)*sc];
+    ctx.save(); ctx.lineWidth=1.4; ctx.strokeStyle=C.ink; ctx.fillStyle=C.plate;
+    let tip;
+    if(g){
+      ctx.beginPath(); g.out.forEach((p,i)=>{ const [X,Y]=P(p[0],p[1]); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }); ctx.closePath();
+      g.holes.forEach(([hx,hy])=>{ const [cx,cy]=P(hx,hy); ctx.moveTo(cx+g.hr*sc,cy); ctx.arc(cx,cy,g.hr*sc,0,2*Math.PI); });
+      ctx.fill('evenodd'); ctx.stroke();
+      const nw=Math.max(2,0.03*sc), [xm,yc]=P(g.mouth,0), [xn]=P(g.aRef+0.45,0), [xa]=P(g.aRef+0.5,0);
+      ctx.fillStyle=C.surface; ctx.beginPath(); ctx.moveTo(xm-2,yc-nw); ctx.lineTo(xn-nw*1.5,yc-nw); ctx.lineTo(xn,yc); ctx.lineTo(xn-nw*1.5,yc+nw); ctx.lineTo(xm-2,yc+nw); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle=C.hot; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(xn,yc); ctx.lineTo(xa,yc); ctx.stroke(); tip=[xa,yc];
+      // load line through the holes and pulling arrows
+      const [lx,ly1]=P(g.load,g.holes[0][1]), [,ly2]=P(g.load,g.holes[1][1]), [,yt]=P(0,y0), [,yb]=P(0,y1);
+      ctx.strokeStyle=C.accent; ctx.fillStyle=C.accent; ctx.lineWidth=1.6;
+      arrow(ctx,lx,ly1,lx,yt-22,6); arrow(ctx,lx,ly2,lx,yb+22,6);
+      ctx.setLineDash([3,3]); ctx.strokeStyle=C.muted; ctx.beginPath(); ctx.moveTo(lx,ly1); ctx.lineTo(lx,ly2); ctx.stroke(); ctx.setLineDash([]);
+      // W dimension (drawn just under the crack line) and a label
+      const [wa]=P(g.aRef,0), [wb]=P(g.aRef+1,0), dy=yc+Math.max(16,0.12*sc);
+      ctx.strokeStyle=C.muted; ctx.fillStyle=C.muted; ctx.lineWidth=1;
+      arrow(ctx,(wa+wb)/2,dy,wa,dy,4); arrow(ctx,(wa+wb)/2,dy,wb,dy,4); label(ctx,'W',(wa+wb)/2,dy+10,{align:'center',size:11,color:C.muted,bg:true});
+      label(ctx,'a',(wa+tip[0])/2,yc-14,{align:'center',size:11,color:C.hot,bg:true});
+      if(SP==='at') label(ctx,'drawn with X/W = 0.5, r₁/r₂ = 0.5',12,45,{size:10,color:C.muted,bg:true});
+    } else {
+      ctx.beginPath(); ctx.rect(ox,oy,4.5*sc,sc); ctx.fill(); ctx.stroke();
+      const mx=ox+2.25*sc, nw=Math.max(2,0.03*sc), yb=oy+sc, yn=yb-0.45*sc, ya=yb-0.5*sc;
+      ctx.fillStyle=C.surface; ctx.beginPath(); ctx.moveTo(mx-nw,yb); ctx.lineTo(mx-nw,yn+nw*1.5); ctx.lineTo(mx,yn); ctx.lineTo(mx+nw,yn+nw*1.5); ctx.lineTo(mx+nw,yb); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle=C.hot; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(mx,yn); ctx.lineTo(mx,ya); ctx.stroke(); tip=[mx,ya];
+      ctx.fillStyle=C.muted; [-2,2].forEach(k=>{ const x=mx+k*sc; ctx.beginPath(); ctx.moveTo(x,yb); ctx.lineTo(x-7,yb+12); ctx.lineTo(x+7,yb+12); ctx.closePath(); ctx.fill(); });
+      ctx.strokeStyle=C.accent; ctx.fillStyle=C.accent; ctx.lineWidth=1.6; arrow(ctx,mx,oy-24,mx,oy-2,6);
+      const dy=yb+22; ctx.strokeStyle=C.muted; ctx.fillStyle=C.muted; ctx.lineWidth=1;
+      arrow(ctx,mx,dy,mx-2*sc,dy,4); arrow(ctx,mx,dy,mx+2*sc,dy,4); label(ctx,'S = 4W',mx+sc,dy+10,{align:'center',size:11,color:C.muted});
+      const dx=ox+4.5*sc+10; arrow(ctx,dx,oy+sc/2,dx,oy,4); arrow(ctx,dx,oy+sc/2,dx,oy+sc,4); label(ctx,'W',dx+6,oy+sc/2,{size:11,color:C.muted});
+      label(ctx,'a',mx+12,(yb+ya)/2,{size:11,color:C.hot,bg:true});
+    }
+    ctx.restore();
+    // plastic zone at the tip, to scale
+    const rp=Math.pow(K/sy,2)/(3*Math.PI)*1000, rpx=rp/W*sc;
+    ctx.fillStyle=C.hot; ctx.globalAlpha=.55; ctx.beginPath(); ctx.arc(tip[0],tip[1],Math.max(1.2,rpx),0,2*Math.PI); ctx.fill(); ctx.globalAlpha=1;
+    // thickness side view
+    const tx=w-pad-60, th=gh*sc, bwp=Math.max(2,0.5*sc);
+    const bw=Math.min(bwp,60); ctx.fillStyle=C.plate; ctx.strokeStyle=C.ink; ctx.lineWidth=1.4; ctx.beginPath(); ctx.rect(tx+(60-bw)/2,oy,bw,th); ctx.fill(); ctx.stroke();
+    label(ctx,'B = W/2',tx+30,oy+th+14,{align:'center',size:11,color:C.muted});
+    if(bwp>60) label(ctx,'(not to scale)',tx+30,oy+th+28,{align:'center',size:10,color:C.muted});
+    // scale bar
+    const mmpx=sc/W, opts=[1,2,5,10,20,50,100,200,500,1000,2000]; let L=opts[0]; for(const o of opts) if(o*mmpx<=Math.min(160,w*0.3)) L=o;
+    const sbx=pad, sby=h-14; ctx.strokeStyle=C.ink; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(sbx,sby); ctx.lineTo(sbx+L*mmpx,sby); ctx.stroke();
+    ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(sbx,sby-4); ctx.lineTo(sbx,sby+4); ctx.moveTo(sbx+L*mmpx,sby-4); ctx.lineTo(sbx+L*mmpx,sby+4); ctx.stroke();
+    label(ctx,(L>=1000?L/1000+' m':L+' mm'),sbx+L*mmpx+8,sby,{size:11});
+    label(ctx,(g?g.name:'SE(B)')+' to scale for '+(MAT[mat.value]?MAT[mat.value].name:'custom values')+(w<520?'':', a/W = 0.5'),12,14,{size:11,bg:true});
+    label(ctx,'orange dot: plane-strain plastic zone r_p = '+fmtL(rp),12,30,{size:10,color:C.hot,bg:true});
+    // E399 table check
+    const r=sy/(m.E*1000); let tb=null; for(const [lim,v] of TAB) if(r>=lim) tb=v;
+    if(w>=520) label(ctx,'σys/E = '+r.toFixed(4)+(tb?' → table minimum B ≈ '+tb+' mm':' < 0.005: size from K estimate only'),w-12,14,{align:'right',size:10,color:C.muted});
+  };
+  [sK,sY,mat].forEach(i=>i.addEventListener('input',()=>s.cv.dirty=true));
+}
+
+/* ---------- Section 3: fatigue pre-cracking ---------- */
+{
+  const s={cv:makeCanvas(document.getElementById('xf')),t:0,playing:!reduce,visible:false};
+  scenes.push(s); playBtn(document.getElementById('xfp'),s);
+  const el=id=>document.getElementById(id), sel=el('xfm'), sR=el('xfR');
+  let MODE='load';
+  document.querySelectorAll('[data-fc]').forEach(b=>b.onclick=()=>{ MODE=b.dataset.fc; document.querySelectorAll('[data-fc]').forEach(o=>o.setAttribute('aria-pressed',String(o===b))); s.t=0; });
+  sel.addEventListener('change',()=>{ s.t=0; });
+  const Wm=50, an=0.45*Wm, af=0.5*Wm, a1=0.975*af, mexp=3;
+  const shape=x=>MODE==='load'?fCT(x):fCT(x)/qCT(x);       // K per unit load (or per unit displacement)
+  function plan(){ const M=MAT[sel.value], R=+sR.value, Ke=M.K, L1=0.8*Ke, Lt=Math.min(0.6*Ke,0.00032*M.E*1000);
+    const K1=0.7*Ke, c1=K1/shape(an/Wm);
+    const c2=MODE==='load'?0.9*Lt/shape(af/Wm):0.9*Lt/shape(a1/Wm);
+    const n=240, A=[], Kx=[], Nx=[]; let N=0;
+    for(let i=0;i<=n;i++){ const a=an+(af-an)*i/n, k=(a<a1?c1:c2)*shape(a/Wm); A.push(a); Kx.push(k);
+      if(i>0){ const dK=(1-R)*(Kx[i-1]+k)/2; N+=((af-an)/n*1e-3)/(M.C*Math.pow(dK,mexp)); } Nx.push(N); }
+    return {M,R,Ke,L1,Lt,A,Kx,Nx,gov:0.6*Ke<=0.00032*M.E*1000?'0.6 K_IC':'Kmax/E'}; }
+  s.draw=()=>{ const {ctx,w,h}=s.cv; if(!w) return;
+    el('xfRo').textContent=(+sR.value).toFixed(2);
+    const p=plan(), T=10, ph=(s.t%(T+2))/T, u=Math.min(1,ph), idx=Math.round(u*(p.A.length-1)), a=p.A[idx], K=p.Kx[idx];
+    el('oxa').textContent=(a/Wm).toFixed(3); el('oxk').textContent=K.toFixed(1)+' MPa√m'; el('oxn').textContent=Math.round(p.Nx[idx]).toLocaleString('en-US');
+    el('oxl').textContent=p.Lt.toFixed(1)+' MPa√m ('+p.gov+')';
+    const okAll=p.Kx.every((k,i)=>p.A[i]<a1?k<=p.L1+1e-9:k<=p.Lt+1e-9), fl=el('xff');
+    fl.className='flag '+(okAll?'ok':'warn'); fl.textContent=okAll?'Pre-crack meets the K_max limits of Annex A2 (start ≤ 0.8 K_IC,est, terminal ≤ '+p.Lt.toFixed(1)+' MPa√m)':'A limit is exceeded';
+    ctx.clearRect(0,0,w,h); ctx.fillStyle=C.surface; ctx.fillRect(0,0,w,h);
+    // --- close-up of the notch tip (front face), mm coordinates
+    const zx0=an-3.2, zx1=af+1.8, zh=Math.max(118,h*0.38), zy=26, zw=w-24, X=x=>12+(x-zx0)/(zx1-zx0)*zw, mm=zw/(zx1-zx0), yc=zy+zh/2;
+    ctx.fillStyle=C.plate; ctx.fillRect(12,zy,zw,zh); ctx.strokeStyle=C.rule; ctx.strokeRect(12.5,zy+.5,zw,zh);
+    const open=(0.5+0.5*Math.sin(s.t*2*Math.PI*1.4))*(1-0.5*Math.max(0,-p.R)*0)*Math.min(3.5,0.04*K*mm/20);
+    const nw=0.35*mm;   // notch half width 0.35 mm
+    ctx.fillStyle=C.surface; ctx.strokeStyle=C.ink; ctx.lineWidth=1.3; ctx.beginPath();
+    ctx.moveTo(12,yc-nw); ctx.lineTo(X(an)-nw*1.2,yc-nw); ctx.lineTo(X(an),yc); ctx.lineTo(X(an)-nw*1.2,yc+nw); ctx.lineTo(12,yc+nw); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // pencil lines
+    [[a1,'97.5% line: reduce K_max'],[af,'final length']].forEach(([x,t],i)=>{ ctx.strokeStyle=C.muted; ctx.setLineDash([4,3]); ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(X(x),zy+4); ctx.lineTo(X(x),zy+zh-4); ctx.stroke(); ctx.setLineDash([]);
+      if(w>=520||i===1) label(ctx,w<520?'final':t,X(x)+(i?4:-4),zy+12+(i?0:0),{size:10,color:C.muted,align:i?'left':'right',bg:true}); });
+    // fatigue crack (opens slightly with the cycle)
+    ctx.fillStyle=C.surface; ctx.strokeStyle=C.hot; ctx.lineWidth=1.6; ctx.beginPath(); ctx.moveTo(X(an),yc-open); ctx.lineTo(X(a),yc); ctx.lineTo(X(an),yc+open); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // cyclic plastic zone to scale (plane strain monotonic estimate)
+    const rp=Math.pow(K/p.M.sy,2)/(3*Math.PI)*1000;
+    ctx.fillStyle=C.hot; ctx.globalAlpha=.35; ctx.beginPath(); ctx.arc(X(a),yc,Math.max(1.5,rp*mm),0,2*Math.PI); ctx.fill(); ctx.globalAlpha=1;
+    label(ctx,'notch (root radius ≤ 0.08 mm)',14,zy+zh-12,{size:10,color:C.muted,bg:true});
+    if(w>=520){ const lx=X(a)+Math.max(6,rp*mm+4), rt=lx+200>w; label(ctx,'plastic zone at K_max ≈ '+(rp*1000).toFixed(0)+' µm',rt?X(a)-Math.max(6,rp*mm+4):lx,yc+18+(rt?8:0),{size:10,color:C.hot,bg:true,align:rt?'right':'left'}); }
+    label(ctx,(w<520?'C(T), W = 50 mm, ':'Fatigue pre-crack in a C(T), W = 50 mm, ')+(MODE==='load'?'load':(w<520?'displ.':'displacement'))+' control, R = '+(+sR.value).toFixed(2),12,12,{size:11});
+    // 1 mm scale
+    ctx.strokeStyle=C.ink; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(w-24-mm,zy+zh-10); ctx.lineTo(w-24,zy+zh-10); ctx.stroke(); label(ctx,'1 mm',w-24-mm/2,zy+zh-22,{size:10,align:'center',bg:true});
+    // --- K_max vs crack extension
+    const b={x:52,y:zy+zh+40,w:w-70,h:h-(zy+zh+40)-40};
+    const kmaxY=Math.max(p.L1*1.15,Math.max(...p.Kx)*1.1);
+    const m=axes(ctx,b,[an,af],[0,kmaxY],{nx:5,ny:4,xl:'crack length a, mm',yl:'K_max, MPa√m',xf:v=>v.toFixed(1)});
+    ctx.fillStyle=C.hot; ctx.globalAlpha=.10; ctx.fillRect(m.X(an),m.Y(kmaxY),m.X(a1)-m.X(an),m.Y(p.L1)-m.Y(kmaxY)); ctx.fillRect(m.X(a1),m.Y(kmaxY),m.X(af)-m.X(a1),m.Y(p.Lt)-m.Y(kmaxY)); ctx.globalAlpha=1;
+    ctx.strokeStyle=C.hot; ctx.lineWidth=1.4; ctx.setLineDash([6,4]); ctx.beginPath(); ctx.moveTo(m.X(an),m.Y(p.L1)); ctx.lineTo(m.X(a1),m.Y(p.L1)); ctx.moveTo(m.X(a1),m.Y(p.Lt)); ctx.lineTo(m.X(af),m.Y(p.Lt)); ctx.stroke(); ctx.setLineDash([]);
+    label(ctx,'0.8 K_IC,est',m.X(an)+6,m.Y(p.L1)-9,{size:10,color:C.hot,bg:true});
+    label(ctx,w<520?'terminal limit':'terminal: min(0.6 K_Q, 0.00032 E)',m.X(af)-4,m.Y(p.Lt)-9,{size:10,color:C.hot,bg:true,align:'right'});
+    ctx.strokeStyle=C.accent; ctx.lineWidth=2.4; ctx.beginPath(); for(let i=0;i<=idx;i++){ const P=[m.X(p.A[i]),m.Y(p.Kx[i])]; i?ctx.lineTo(...P):ctx.moveTo(...P); } ctx.stroke();
+    ctx.fillStyle=C.accent; ctx.beginPath(); ctx.arc(m.X(a),m.Y(K),4,0,2*Math.PI); ctx.fill();
+    if(p.R<0){ ctx.strokeStyle=C.muted; ctx.lineWidth=1; ctx.setLineDash([2,3]); ctx.beginPath(); for(let i=0;i<=idx;i++){ const P=[m.X(p.A[i]),m.Y(Math.max(0,-p.R*p.Kx[i]))]; i?ctx.lineTo(...P):ctx.moveTo(...P);} ctx.stroke(); ctx.setLineDash([]);
+      if(w>=520) label(ctx,'|K_min| (compression)',m.X(an)+6,m.Y(-p.R*p.Kx[0])+10,{size:10,color:C.muted,bg:true}); }
+  };
+  [sel,sR].forEach(i=>i.addEventListener('input',()=>{ s.cv.dirty=true; }));
+}
+
+/* ---------- Section 4: test record and 5% secant ---------- */
+{
+  const s={cv:makeCanvas(document.getElementById('xr')),t:reduce?99:0,playing:!reduce,visible:false};
+  scenes.push(s); playBtn(document.getElementById('xrp'),s);
+  const el=id=>document.getElementById(id), sd=el('xrd'), pop=el('xrpop');
+  const x5=(()=>{ let lo=0.01,hi=1; for(let i=0;i<60;i++){ const m=(lo+hi)/2; (Math.tanh(m)/m>0.95)?lo=m:hi=m; } return (lo+hi)/2; })();
+  const P5n=30, Pl=P5n/Math.tanh(x5), vl=0.30/x5, k0=Pl/vl;    // kN, mm
+  function record(){ const r=+sd.value, pts=[[0,0]]; const n=400;
+    if(!pop.checked){ const Pm=r*P5n, xf=Math.atanh(Math.min(0.999,Pm/Pl));
+      for(let i=1;i<=n;i++){ const v=xf*vl*i/n; pts.push([v,Pl*Math.tanh(v/vl)]); } }
+    else { const xp=0.94*x5, vp=xp*vl, Pp=Pl*Math.tanh(xp), vs=Pp/(0.95*k0), dvj=3*(vs-vp), Pd=0.92*Pp;
+      for(let i=1;i<=n/2;i++){ const v=vp*i/(n/2); pts.push([v,Pl*Math.tanh(v/vl)]); }
+      pts.push([vp+dvj,Pd]);
+      const sh=vp+dvj-vl*Math.atanh(Pd/Pl), Pm=Math.max(Pd*1.001,r*Pp), xe=Math.atanh(Math.min(0.999,Pm/Pl));
+      for(let i=1;i<=n/2;i++){ const v=vp+dvj+(xe*vl+sh-(vp+dvj))*i/(n/2); pts.push([v,Pl*Math.tanh((v-sh)/vl)]); } }
+    const end=pts[pts.length-1]; pts.push([end[0]*1.01,end[1]*0.15]);
+    // secant intersection
+    let i5=-1, P5=null, v5=null;
+    for(let i=1;i<pts.length-1;i++){ const g0=pts[i-1][1]-0.95*k0*pts[i-1][0], g1=pts[i][1]-0.95*k0*pts[i][0];
+      if(g0>0 && g1<=0){ const f=g0/(g0-g1); v5=pts[i-1][0]+f*(pts[i][0]-pts[i-1][0]); P5=pts[i-1][1]+f*(pts[i][1]-pts[i-1][1]); i5=i; break; } }
+    const Pmax=Math.max(...pts.map(p=>p[1]));
+    let PQ, type;
+    if(i5<0){ PQ=Pmax; type='III'; } else { const pre=Math.max(...pts.slice(0,i5).map(p=>p[1])); if(pre>P5*1.002){ PQ=pre; type='II'; } else { PQ=P5; type='I'; } }
+    return {pts,P5,v5,PQ,Pmax,type}; }
+  s.draw=()=>{ const {ctx,w,h}=s.cv; if(!w) return;
+    el('xrdo').textContent=(+sd.value).toFixed(2);
+    const R=record(), T=5, u=Math.min(1,(s.t%(T+3))/T);
+    el('oxt').textContent='Type '+R.type; el('ox5').textContent=R.P5?R.P5.toFixed(1)+' kN':'not reached';
+    el('oxq').textContent=R.PQ.toFixed(1)+' kN'; const ratio=R.Pmax/R.PQ; el('oxr').textContent=ratio.toFixed(3);
+    const fl=el('xrf'), ok=ratio<=1.10; fl.className='flag '+(ok?'ok':'warn');
+    fl.textContent=ok?'P_max/P_Q ≤ 1.10: continue with K_Q and the size check':'P_max/P_Q > 1.10: not a valid K_IC test (§9.1.2)';
+    ctx.clearRect(0,0,w,h); ctx.fillStyle=C.surface; ctx.fillRect(0,0,w,h);
+    const vmax=Math.max(...R.pts.map(p=>p[0]))*1.12, pmax=Math.max(...R.pts.map(p=>p[1]))*1.18;
+    const b={x:52,y:50,w:w-70,h:h-90};
+    const m=axes(ctx,b,[0,vmax],[0,pmax],{nx:5,ny:5,xl:'crack mouth opening v, mm',yl:'load P, kN',xf:v=>v.toFixed(2)});
+    const k=Math.floor(u*(R.pts.length-1));
+    // tangent OA and secant OP5
+    const vT=Math.min(vmax,pmax/k0);
+    ctx.strokeStyle=C.muted; ctx.lineWidth=1.2; ctx.setLineDash([5,4]); ctx.beginPath(); ctx.moveTo(m.X(0),m.Y(0)); ctx.lineTo(m.X(vT),m.Y(k0*vT)); ctx.stroke();
+    const vS=Math.min(vmax,pmax/(0.95*k0)); ctx.strokeStyle=C.accent; ctx.setLineDash([2,3]); ctx.beginPath(); ctx.moveTo(m.X(0),m.Y(0)); ctx.lineTo(m.X(vS),m.Y(0.95*k0*vS)); ctx.stroke(); ctx.setLineDash([]);
+    { const vv=(R.v5||vS*0.6)*0.5; label(ctx,'tangent OA',m.X(vv)-10,m.Y(k0*vv)-10,{size:10,color:C.muted,align:'right',bg:true}); }
+    { const vv=(R.v5||vS*0.6)*0.7; label(ctx,'5% secant OP₅',m.X(vv)+10,m.Y(0.95*k0*vv)+12,{size:10,color:C.accent,bg:true}); }
+    // record
+    ctx.strokeStyle=C.ink; ctx.lineWidth=2.4; ctx.beginPath(); for(let i=0;i<=k;i++){ const P=[m.X(R.pts[i][0]),m.Y(R.pts[i][1])]; i?ctx.lineTo(...P):ctx.moveTo(...P); } ctx.stroke();
+    if(u>=1){
+      if(R.P5){ ctx.fillStyle=C.accent; ctx.beginPath(); ctx.arc(m.X(R.v5),m.Y(R.P5),4.5,0,2*Math.PI); ctx.fill(); label(ctx,'P₅',m.X(R.v5)-8,m.Y(R.P5)+12,{size:11,color:C.accent,bg:true,align:'right'}); }
+      const hl=(P,txt,col,dy)=>{ ctx.strokeStyle=col; ctx.lineWidth=1; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(b.x,m.Y(P)); ctx.lineTo(b.x+b.w,m.Y(P)); ctx.stroke(); ctx.setLineDash([]); label(ctx,txt,b.x+b.w-4,m.Y(P)+dy,{size:11,color:col,align:'right',bg:true}); };
+      hl(R.Pmax,'P_max = '+R.Pmax.toFixed(1)+' kN',C.ink,-10);
+      if(Math.abs(R.PQ-R.Pmax)>0.2) hl(R.PQ,'P_Q = '+R.PQ.toFixed(1)+' kN',C.hot,12); else label(ctx,'P_Q = P_max',b.x+b.w-4,m.Y(R.Pmax)+12,{size:11,color:C.hot,align:'right',bg:true});
+    }
+    label(ctx,(w<520?'Type ':'Synthetic record, Type ')+R.type+(R.type==='I'?': P_Q = P₅':R.type==='II'?(w<520?': pop-in':': pop-in, P_Q = pop-in load'):(w<520?': P_Q = P_max':': fracture before the secant, P_Q = P_max')),12,14,{size:11});
+  };
+  [sd,pop].forEach(i=>i.addEventListener('input',()=>{ s.t=s.playing?0:99; }));
+}
+
+/* ---------- Section 5: K_Q calculator and validity checks ---------- */
+{
+  const el=id=>document.getElementById(id), out=el('xcalc');
+  let SPC='ct';
+  const EX={ok:{sp:'ct',W:50,B:25,an:22.5,a1:25.1,a2:25.6,a3:25.2,s1:24.6,s2:24.7,PQ:28.5,Pm:30.0,sy:1500,E:210,Kf:24},
+            al:{sp:'sb',W:12,B:6,an:4.5,a1:6.05,a2:6.15,a3:6.08,s1:5.85,s2:5.9,PQ:1.75,Pm:1.95,sy:500,E:72,Kf:12}};
+  const ids={W:'iW',B:'iB',an:'ian',a1:'ia1',a2:'ia2',a3:'ia3',s1:'is1',s2:'is2',PQ:'iPQ',Pm:'iPm',sy:'isy',E:'iE',Kf:'iKf'};
+  const setSp=sp=>{ SPC=sp; document.querySelectorAll('[data-cs]').forEach(o=>o.setAttribute('aria-pressed',String(o.dataset.cs===sp))); document.querySelectorAll('.atonly').forEach(o=>o.hidden=sp!=='at'); };
+  const load=k=>{ const e=EX[k]; setSp(e.sp); Object.keys(ids).forEach(n=>el(ids[n]).value=e[n]); calc(); };
+  document.querySelectorAll('[data-cs]').forEach(b=>b.onclick=()=>{ setSp(b.dataset.cs); calc(); });
+  document.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>load(b.dataset.ex));
+  Object.values(ids).concat(['iXW','iRR']).forEach(i=>el(i).addEventListener('input',()=>calc()));
+  function calc(){ const v={}; const xw=parseFloat(el('iXW').value), rr=parseFloat(el('iRR').value);
+    if(SPC==='at'&&!(isFinite(xw)&&xw>=0&&xw<=1&&isFinite(rr)&&rr>=0&&rr<1)){ out.innerHTML='<div>For A(T), enter X/W between 0 and 1 and r₁/r₂ between 0 and 1.</div>'; return; }
+    for(const n in ids){ v[n]=parseFloat(el(ids[n]).value); if(!isFinite(v[n])||v[n]<=0){ out.innerHTML='<div>Enter positive values in all fields.</div>'; return; } }
+    const a=(v.a1+v.a2+v.a3)/3, al=a/v.W;
+    if(al<=0.05||al>=0.95){ out.innerHTML='<div>a/W must be between 0 and 1.</div>'; return; }
+    const f=SPC==='ct'?fCT(al):SPC==='dc'?fDC(al):SPC==='at'?fAT(al)*(3*xw+1.9+1.1*al)*(1+0.25*(1-al)*(1-al)*(1-rr)):fSB(al), Bc=v.B/10, Wc=v.W/10, S=4*Wc;
+    const KQ=SPC==='sb'?v.PQ*S/(Bc*Math.pow(Wc,1.5))*f:v.PQ/(Bc*Math.sqrt(Wc))*f;
+    const sz=2.5*Math.pow(KQ/v.sy,2)*1000;
+    const pc=Math.min(v.s1,v.s2)-v.an, pcmin=Math.max(0.025*v.W,1.3);
+    const d3=Math.max(v.a1,v.a2,v.a3)-Math.min(v.a1,v.a2,v.a3);
+    const sdev=Math.max(Math.abs(v.s1-a),Math.abs(v.s2-a)), sdif=Math.abs(v.s1-v.s2);
+    const ratio=v.Pm/v.PQ, KfE=v.Kf/(v.E*1000);
+    const den=v.B*1e-3*Math.pow((v.W-a)*1e-3,2)*v.sy*1e6;   // N
+    const Rs=SPC==='sb'?6*v.Pm*1e3*v.W/den*1e-3:2*v.Pm*1e3*((SPC==='at'?3*xw*v.W:0)+2*v.W+a)*1e-3/den;
+    const C2=[
+      ['a/W between 0.45 and 0.55','§7.3.2.1',al>=0.45&&al<=0.55,'a/W = '+al.toFixed(3)],
+      ['Pre-crack on both faces ≥ max(0.025W, 1.3 mm)','§7.3.2.2',pc>=pcmin,pc.toFixed(2)+' mm ≥ '+pcmin.toFixed(2)+' mm'],
+      ['Any two of a₁, a₂, a₃ within 10% of a','§8.2.2',d3<=0.10*a,(100*d3/a).toFixed(1)+'%'],
+      ['Face readings within 15% of a, and within 10% of each other','§8.2.2',sdev<=0.15*a&&sdif<=0.10*a,(100*sdev/a).toFixed(1)+'%, '+(100*sdif/a).toFixed(1)+'%'],
+      ['P_max/P_Q ≤ 1.10','§9.1.2',ratio<=1.10,ratio.toFixed(3)],
+      ['B ≥ 2.5(K_Q/σ_YS)²','§9.1.3',v.B>=sz,v.B.toFixed(2)+' mm vs '+sz.toFixed(2)+' mm'],
+      ['a ≥ 2.5(K_Q/σ_YS)²','§9.1.3',a>=sz,a.toFixed(2)+' mm vs '+sz.toFixed(2)+' mm'],
+      ['Terminal pre-crack K_max ≤ 0.6 K_Q','A2.3.3',v.Kf<=0.6*KQ,v.Kf.toFixed(1)+' vs '+(0.6*KQ).toFixed(1)+' MPa√m'],
+      ['Terminal K_max/E ≤ 0.00032 √m','A2.3.3',KfE<=0.00032,KfE.toExponential(2)+' √m']];
+    const bad=C2.filter(c=>!c[2]);
+    const fstr=SPC==='sb'?'P_Q·S/(B·W^1.5)·f(a/W)':SPC==='at'?'P_Q/(B√W)·f′(a/W, X/W, r₁/r₂)':'P_Q/(B√W)·f(a/W)';
+    out.innerHTML=
+      '<div>a = (a₁ + a₂ + a₃)/3 = '+a.toFixed(2)+' mm, &nbsp; a/W = '+al.toFixed(4)+', &nbsp; f(a/W) = '+f.toFixed(3)+'</div>'+
+      '<div>K_Q = '+fstr+' = <span class="res">'+KQ.toFixed(1)+' MPa√m</span></div>'+
+      '<div>2.5 (K_Q/σ_YS)² = '+sz.toFixed(2)+' mm, &nbsp; R_s'+({ct:'c',dc:'dc',at:'a',sb:'b'}[SPC])+' = '+Rs.toFixed(2)+'</div>'+
+      '<table class="chk">'+C2.map(c=>'<tr class="'+(c[2]?'ok':'bad')+'"><td>'+(c[2]?'✓':'✗')+'</td><td>'+c[0]+' <small>'+c[1]+'</small></td><td>'+c[3]+'</td></tr>').join('')+'</table>'+
+      (bad.length?'<div class="verdict bad">K_Q = '+KQ.toFixed(1)+' MPa√m, invalid according to '+[...new Set(bad.map(c=>c[1]))].join(', ')+' of ASTM E399</div>'
+                 :'<div class="verdict ok">Valid: K_IC = '+KQ.toFixed(1)+' MPa√m</div>');
+  }
+  load('ok');
+}
+
+
+/* ---------- loop ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{const s=scenes.find(s=>s.cv.el===e.target); if(s) s.visible=e.isIntersecting;}),{threshold:0.05});
+scenes.forEach(s=>io.observe(s.cv.el));
+readTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',readTheme);
+new MutationObserver(readTheme).observe(R,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts) document.fonts.ready.then(()=>scenes.forEach(s=>s.draw&&s.draw()));
+let last=performance.now();
+function frame(now){ const dt=Math.min(0.05,(now-last)/1000); last=now;
+  scenes.forEach(s=>{ if(!s.visible||!s.cv.w) return; if(s.playing && (!reduce || s.forcePlay)) s.t+=dt; s.draw(); });
+  requestAnimationFrame(frame); }
+scenes.forEach(s=>s.draw&&s.cv.w&&s.draw());
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

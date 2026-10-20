@@ -445,13 +445,14 @@ header h1,header .lede{max-width:none}
       <rect x="312" y="78" width="14" height="14" rx="2" class="jdz1" stroke="var(--rule)"/><text x="332" y="90" class="jdt">4. elastic annulus: K-dominated</text>
       <rect x="312" y="100" width="14" height="14" rx="2" class="jdz0" stroke="var(--rule)"/><text x="332" y="112" class="jdt">5. outer field: geometry, load</text>
     </svg>
-    <p><b>K-dominance</b> needs an elastic annulus outside the plastic zone where σ<sub>ij</sub> ≈ K/√(2πr) f<sub>ij</sub>(θ). This is small-scale yielding, and then J = K²/E′. ASTM E399 <a class="cite" href="#ref10">[10]</a> enforces it with a, B, b ≥ 2.5 (K/σ<sub>Y</sub>)², about fifty times the plastic zone size. <b>J-dominance</b> is weaker: it only needs the HRR field of eq. (9) inside the plastic zone, between the blunting zone and the region influenced by the free boundaries. The K annulus can be gone and J still governs the tip.</p>
+    <p><b>K-dominance</b> needs an elastic annulus outside the plastic zone where σ<sub>ij</sub> ≈ K/√(2πr) f<sub>ij</sub>(θ). This is small-scale yielding, and then J = K²/E′. ASTM E399 <a class="cite" href="#ref10">[10]</a> enforces it with a, B, b ≥ 2.5 (K/σ<sub>Y</sub>)², about fifty times the plastic zone size. The annulus has an outer limit too: beyond about 0.1b the other terms of the elastic solution take over and the field depends on the geometry. In the figure the solid curve leaves the K line there, flattening towards the remote stress σ<sub>∞</sub> in centre-cracked tension and falling to zero near mid-ligament in bending, where the stress becomes compressive. <b>J-dominance</b> is weaker: it only needs the HRR field of eq. (9) inside the plastic zone, between the blunting zone and the region influenced by the free boundaries. The K annulus can be gone and J still governs the tip.</p>
     <div class="eq"><span class="eqno">(11)</span>b, B ≥ M · J / σ<sub>0</sub>, &nbsp; M ≈ 25 (bend), M ≈ 200 (tension)
       <small>b is the uncracked ligament. Deep-cracked bend and CT specimens keep high constraint, centre-cracked panels in tension lose it early. ASTM E1820 <a class="cite" href="#ref9">[9]</a> uses M = 10 for J<sub>Ic</sub>. The blunting zone, about 2δ<sub>t</sub> ≈ 1–2 J/σ<sub>0</sub>, sets the inner limit <a class="cite" href="#ref24">[24]</a>.</small>
       <small class="src">Source: McMeeking &amp; Parks <a class="cite" href="#ref22">[22]</a>; Shih &amp; German <a class="cite" href="#ref23">[23]</a></small></div>
     <p>When the ligament is too small, the fields of different geometries at the same J no longer agree. A second parameter measures the difference, either the elastic T-stress <a class="cite" href="#ref18">[18]</a> or the triaxiality parameter Q <a class="cite" href="#ref19">[19]</a>, see <a class="back" href="#j3">the T-stress box in section 3</a>:</p>
     <div class="eq"><span class="eqno">(12)</span>σ<sub>ij</sub> ≈ (σ<sub>ij</sub>)<sub>HRR</sub> + Q σ<sub>0</sub> δ<sub>ij</sub> &nbsp; (|θ| ≤ π/2, J/σ<sub>0</sub> &lt; r &lt; 5J/σ<sub>0</sub>)
-      <small>Q ≈ 0 for a high-constraint geometry (J-dominance holds). Q &lt; 0 means lower stress triaxiality and a higher apparent toughness: J<sub>c</sub> becomes a function J<sub>c</sub>(Q), the J–Q toughness locus. In the figure the solid curve leaves the HRR line by Q as the load rises.</small>
+      <small>Strictly, the reference field is the small-scale yielding solution with T = 0 (a modified boundary layer computed by FE); the HRR field is its leading term and is used here for simplicity. Q is read at θ = 0, r = 2J/σ<sub>0</sub>: Q = (σ<sub>θθ</sub> − (σ<sub>θθ</sub>)<sub>ref</sub>)/σ<sub>0</sub>.</small>
+      <small>Q ≈ 0 for a high-constraint geometry (J-dominance holds). Q &lt; 0 means lower stress triaxiality and a higher apparent toughness: J<sub>c</sub> becomes a function J<sub>c</sub>(Q), the J–Q toughness locus. In the figure the solid curve drops below the HRR line by Qσ<sub>0</sub> as the load rises; the orange bar at r = 2J/σ<sub>0</sub> marks that gap and gives Q. The values are schematic, chosen to show the trend for each geometry, not computed.</small>
       <small class="src">Source: O'Dowd &amp; Shih <a class="cite" href="#ref19">[19]</a>; Betegón &amp; Hancock <a class="cite" href="#ref18">[18]</a></small></div>
   </div>
 </section>
@@ -779,9 +780,13 @@ function playBtn(btn,s){ const set=()=>btn.textContent=s.playing?'Pause':'Play';
     const b2={x:bx,y:sy+sh+40,w:bw,h:h-(sy+sh+40)-40}, yl0=-0.75, yl1=0.95;
     const m=axes(ctx,b2,[L0,L1],[yl0,yl1],{xt:[0,1,2,3],yt:[Math.log10(0.3),0,Math.log10(3)],xf:v=>'10'+['⁰','¹','²','³'][v],yf:v=>v===0?'1':v<0?'0.3':'3',xl:'r σ₀ / J (log)',yl:'σ_yy / σ₀ ahead of the tip (log)'});
     const hrr=x=>3.0*Math.pow(x/blunt,-1/(n+1)), kf=x=>Math.sqrt(Er/(2*Math.PI*x));
-    const Qx=x=>Qt*sstep((Math.log(x)-Math.log(Math.max(blunt,RJ)))/Math.log(3));
+    const Qx=x=>Qt*sstep(Math.log(x)/Math.log(blunt));   // uniform shift Q σ0 from r = 2J/σ0 outwards (O'Dowd–Shih)
     const bl=x=>1-Math.exp(-Math.pow(x/0.7,1.3));
-    const act=x=>{ const inner=(hrr(x)+Qx(x)); const u=rp<M?sstep((Math.log(x)-Math.log(rp))/1.2+0.5):0; return Math.max(0.05,bl(x)*((1-u)*inner+u*kf(x))); };
+    // elastic field outside the plastic zone: K term near the tip, geometry-dependent beyond about 0.1b
+    // tension: Westergaard crack-line solution with a = b, tends to the remote stress; bend: K term times a factor that falls to zero at mid-ligament
+    const Ck=Math.sqrt(Er/(2*Math.PI)), sinf=Ck*Math.sqrt(2/M);
+    const outer=x=>geo.value==='ten'?sinf*(M+x)/Math.sqrt(x*(2*M+x)):kf(x)*(1-Math.pow(2*x/M,1.5));
+    const act=x=>{ const inner=(hrr(x)+Qx(x)); const u=rp<M?sstep((Math.log(x)-Math.log(rp))/1.2+0.5):0; return Math.max(0.05,bl(x)*((1-u)*inner+u*outer(x))); };
     const path=(f,col,lw,dash,x0,x1)=>{ ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.setLineDash(dash||[]); ctx.beginPath(); let on=false;
       for(let k=0;k<=240;k++){ const l=L0+(L1-L0)*k/240; if(l<x0||l>x1) continue; const v=lg(f(Math.pow(10,l))); if(v<yl0-0.3||v>yl1+0.3){ on=false; continue; }
         const P=[m.X(l),m.Y(v)]; on?ctx.lineTo(P[0],P[1]):ctx.moveTo(P[0],P[1]); on=true; } ctx.stroke(); ctx.setLineDash([]); };
@@ -790,8 +795,18 @@ function playBtn(btn,s){ const set=()=>btn.textContent=s.playing?'Pause':'Play';
     path(hrr,C.accent,1.6,[6,4],L0,L1); path(kf,C.cool,1.6,[2,3],L0,L1); path(act,C.ink,2.6,null,L0,lg(M));
     ctx.restore();
     label(ctx,'HRR, amplitude J',m.X(0.15),m.Y(lg(hrr(1.4)))-12,{size:10,color:C.accent,bg:true});
-    label(ctx,'K field K/√(2πr)',m.X(0.45)+10,m.Y(lg(kf(Math.pow(10,0.45)))),{size:10,color:C.cool,bg:true});
+    const lk=w<480?0.25:1.0; label(ctx,'K field K/√(2πr)',m.X(lk)+10,m.Y(lg(kf(Math.pow(10,lk)))),{size:10,color:C.cool,bg:true});
+    // Q read at r = 2J/σ0: gap between the actual field and the T = 0 reference (here HRR with the same blunting)
+    { const lq=lg(blunt), xa=m.X(lq), va=act(blunt), vr=va-bl(blunt)*Qt, ya=m.Y(lg(va)), yr=m.Y(lg(vr));
+      ctx.strokeStyle=C.muted; ctx.lineWidth=1; ctx.setLineDash([2,3]); ctx.beginPath(); ctx.moveTo(xa,b2.y); ctx.lineTo(xa,b2.y+b2.h); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle=C.hot; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(xa-5,yr); ctx.lineTo(xa+5,yr); ctx.moveTo(xa,yr); ctx.lineTo(xa,ya); ctx.moveTo(xa-5,ya); ctx.lineTo(xa+5,ya); ctx.stroke();
+      label(ctx,'r = 2J/σ₀',xa+4,b2.y+b2.h-10,{size:10,color:C.muted,bg:true});
+      label(ctx,'Q = '+(Math.abs(Qt)<0.005?'0.00':Qt.toFixed(2)),xa+8,Math.max(ya,yr)+14,{size:11,color:C.hot,bg:true}); }
     label(ctx,'actual field (schematic)',m.X(Math.min(lg(M)-0.05,1.6)),m.Y(lg(act(Math.pow(10,Math.min(lg(M)-0.05,1.6)))))+14,{size:10,bg:true,align:'center'});
+    if(geo.value==='ten'){ const xe=m.X(Math.min(lg(M),L1)), ye=m.Y(lg(act(M*0.98)));
+      if(lg(sinf)>yl0){ if(xe+50<b2.x+b2.w) label(ctx,'→ σ∞',xe+6,ye,{size:10,bg:true}); else label(ctx,'→ σ∞',xe-4,ye-12,{size:10,align:'right',bg:true}); } }
+    else if(lg(M)-0.5>L0+0.4){ const tx=w<480?'→ 0, then compressive':'σ_yy → 0 near mid-ligament, then compressive'; ctx.font='10px '+MONO;
+      const tw=ctx.measureText(tx).width, xr=m.X(lg(0.42*M)); label(ctx,tx,Math.max(xr,b2.x+tw+6),b2.y+b2.h-40,{size:10,align:'right',bg:true}); }
     if(w>=480) label(ctx,'E′/σ₀ = '+Er+', n = '+n+' (slider above)',b2.x+b2.w-4,b2.y+10,{align:'right',size:10,color:C.muted,bg:true});
   };
   [sl,geo,hn].forEach(i=>i.addEventListener('input',()=>s.cv.dirty=true));
