@@ -238,15 +238,15 @@ header h1,header .lede{max-width:none}
     <div class="controls">
       <div class="seg" role="group" aria-label="Specimen type"><button data-sp="ct" aria-pressed="true">C(T)</button><button data-sp="dc" aria-pressed="false">DC(T)</button><button data-sp="at" aria-pressed="false">A(T)</button><button data-sp="sb" aria-pressed="false">SE(B)</button></div>
       <label class="ctl" style="flex:1 1 220px">Material<select id="xmat">
-        <option value="st">AISI 4340 steel · K ≈ 50, σys ≈ 1500 MPa</option>
-        <option value="al">Al 7075-T651 · K ≈ 29, σys ≈ 500 MPa</option>
-        <option value="ti" selected>Ti-6Al-4V · K ≈ 66, σys ≈ 880 MPa</option>
-        <option value="ps">Pressure-vessel steel, room temperature · K ≈ 200, σys ≈ 480 MPa</option>
+        <option value="st">AISI 4340 steel, tempered 260 °C · K ≈ 50, σys ≈ 1640 MPa</option>
+        <option value="al">Al 7075-T651 (L-T) · K ≈ 29, σys ≈ 505 MPa</option>
+        <option value="ti" selected>Ti-6Al-4V, annealed (L-T) · K ≈ 66, σys ≈ 925 MPa</option>
+        <option value="ps">Pressure-vessel steel A533B-1, room temperature · K ≈ 190, σys ≈ 481 MPa</option>
         <option value="cu">Custom (use the sliders)</option></select></label>
     </div>
     <div class="controls">
       <div class="ctl"><label for="xK"><span>Estimated K<sub>IC</sub></span> <output id="xKo"></output></label><input type="range" id="xK" min="5" max="250" step="1" value="66"></div>
-      <div class="ctl"><label for="xY"><span>Yield strength σ<sub>YS</sub></span> <output id="xYo"></output></label><input type="range" id="xY" min="150" max="2000" step="10" value="880"></div>
+      <div class="ctl"><label for="xY"><span>Yield strength σ<sub>YS</sub></span> <output id="xYo"></output></label><input type="range" id="xY" min="150" max="2000" step="1" value="925"></div>
     </div>
     <div class="readout">
       <div><span>2.5 (K/σ<sub>YS</sub>)²</span><strong id="oxm">—</strong></div>
@@ -275,7 +275,8 @@ header h1,header .lede{max-width:none}
     <div class="eq"><span class="eqno">(3)</span>B, a ≥ 2.5 (K<sub>IC</sub> / σ<sub>YS</sub>)²
       <small>σ<sub>YS</sub> is the 0.2% offset yield strength (ASTM E8 <a class="cite" href="#ref4">[4]</a>) at the test temperature and rate. 2.5(K/σ<sub>YS</sub>)² is about 50 times the plane-strain plastic zone (1/3π)(K/σ<sub>YS</sub>)². Since K<sub>IC</sub> is unknown before the test, use a conservative (high) estimate, or the table of minimum sizes by σ<sub>YS</sub>/E given in the standard: from 75 mm for σ<sub>YS</sub>/E ≈ 0.005 down to 6.5 mm for σ<sub>YS</sub>/E ≥ 0.010.</small>
       <small class="src">Source: ASTM E399 §7.1 <a class="cite" href="#ref1">[1]</a>; Brown &amp; Srawley <a class="cite" href="#ref6">[6]</a></small></div>
-    <p>Change the material in the figure. A high-strength steel needs a specimen a few millimetres thick, while a tough pressure-vessel steel at room temperature would need a block close to a metre thick and weighing tonnes. That is why tough materials are tested with J or CTOD instead (<a class="back" href="#e6">section 6</a> and the <a class="back" href="crack-tip-j-integral.html#j7">J-integral page</a>).</p>
+    <p>Change the material in the figure. A high-strength steel needs a specimen a few millimetres thick, while a tough pressure-vessel steel at room temperature would need a block about 0.4 m thick and 0.8 m wide, weighing a few tonnes. That is why tough materials are tested with J or CTOD instead (<a class="back" href="#e6">section 6</a> and the <a class="back" href="crack-tip-j-integral.html#j7">J-integral page</a>).</p>
+    <p class="note"><b>Material data in the figure.</b> Typical room-temperature values, not design allowables. AISI 4340 tempered at 260 °C: K<sub>IC</sub> = 50.0 MPa√m, σ<sub>YS</sub> = 1640 MPa, Callister &amp; Rethwisch, Table 8.1 <a class="cite" href="#ref12">[12]</a>. Al 7075-T651 and annealed Ti-6Al-4V, L-T orientation: K<sub>IC</sub> = 29 and 66 MPa√m, σ<sub>YS</sub> = 505 and 925 MPa, Dowling, Table 8.1 <a class="cite" href="#ref13">[13]</a>, which compiles data from Barsom &amp; Rolfe, the ASM materials handbooks and MIL-HDBK-5. Pressure-vessel plate SA533B-1: σ<sub>YS</sub> = 481 MPa at 24 °C and nil-ductility temperature −29 °C, Ritchie, Server &amp; Wullaert <a class="cite" href="#ref14">[14]</a>. Valid K<sub>IC</sub> values do not exist for this steel at room temperature, for the reason shown in the figure, so K is estimated from the ASME Section XI reference curve K<sub>IC</sub> = 36.5 + 22.783 exp[0.036(T − RT<sub>NDT</sub>)] MPa√m with T − RT<sub>NDT</sub> ≈ 24 − (−29) = 53 °C, which gives 190 MPa√m <a class="cite" href="#ref15">[15]</a>. The curve is a lower bound and is capped at 220 MPa√m, so the real block would be at least this large.</p>
     <p><b>Orientation.</b> Toughness depends on the direction of the crack relative to the rolling or forging direction. The code has two letters: the first is the direction normal to the crack plane, the second the direction of crack growth, with L the main working direction, T the transverse and S the short transverse (thickness) direction. A C(T) cut from a plate with its crack plane normal to L and growing along T is reported as C(T)(L-T).</p>
   </div>
 </section>
@@ -469,6 +470,10 @@ header h1,header .lede{max-width:none}
     <li id="ref9">A. Saxena, S. J. Hudak (1978). Review and extension of compliance information for common crack growth specimens. <i>International Journal of Fracture</i> 14, 453–468.</li>
     <li id="ref10">T. L. Anderson (2017). <i>Fracture Mechanics: Fundamentals and Applications</i>, 4th ed. CRC Press, Boca Raton.</li>
     <li id="ref11">G. R. Irwin (1957). Analysis of stresses and strains near the end of a crack traversing a plate. <i>Journal of Applied Mechanics</i> 24, 361–364.</li>
+    <li id="ref12">W. D. Callister, D. G. Rethwisch (2018). <i>Materials Science and Engineering: An Introduction</i>, 10th ed. Wiley, Hoboken. Table 8.1, room-temperature yield strength and plane strain fracture toughness data for selected engineering materials.</li>
+    <li id="ref13">N. E. Dowling (2013). <i>Mechanical Behavior of Materials</i>, 4th ed. Pearson, Boston. Table 8.1, fracture toughness and corresponding tensile properties for representative metals at room temperature.</li>
+    <li id="ref14">R. O. Ritchie, W. L. Server, R. A. Wullaert (1979). Critical fracture stress and fracture strain models for the prediction of lower and upper shelf toughness in nuclear pressure vessel steels. <i>Metallurgical Transactions A</i> 10, 1557–1570. Table III.</li>
+    <li id="ref15">ASME Boiler and Pressure Vessel Code, Section XI, Nonmandatory Appendix A, K<sub>IC</sub> reference curve for ferritic pressure-vessel steels. ASME, New York. See also TWI, “How do I use the ASME reference curve to estimate the fracture toughness of ferritic steels?”</li>
   </ol>
   <p class="note">Equation numbers are local to this page. Use the back link at the top to return to the stress intensity page.</p>
 </section>
@@ -541,8 +546,8 @@ const fSB=a=>3*Math.sqrt(a)*(1.99-a*(1-a)*(2.15-3.93*a+2.7*a*a))/(2*(1+2*a)*Math
 const fDC=a=>(2+a)*(0.76+4.8*a-11.58*a*a+11.43*a**3-4.08*a**4)/Math.pow(1-a,1.5);
 const fAT=a=>Math.sqrt(a)/Math.pow(1-a,1.5)*(3.74-6.30*a+6.32*a*a-2.43*a**3);   // times [3X/W + 1.9 + 1.1a/W][1 + 0.25(1 - a/W)^2(1 - r1/r2)]
 const qCT=a=>19.75/((1-a)*(1-a))*(0.5+0.192*a+1.385*a*a-2.919*a**3+1.842*a**4);   // C(T) mouth compliance E'B v/P
-const MAT={st:{K:50,sy:1500,E:210,rho:7.85,C:5e-12,name:'AISI 4340 steel'},al:{K:29,sy:500,E:71.7,rho:2.81,C:2e-11,name:'Al 7075-T651'},
-  ti:{K:66,sy:880,E:114,rho:4.43,C:8e-12,name:'Ti-6Al-4V'},ps:{K:200,sy:480,E:205,rho:7.85,C:5e-12,name:'pressure-vessel steel'}};
+const MAT={st:{K:50,sy:1640,E:210,rho:7.85,C:5e-12,name:'AISI 4340 steel'},al:{K:29,sy:505,E:71.7,rho:2.81,C:2e-11,name:'Al 7075-T651'},
+  ti:{K:66,sy:925,E:114,rho:4.43,C:8e-12,name:'Ti-6Al-4V'},ps:{K:190,sy:481,E:205,rho:7.85,C:5e-12,name:'pressure-vessel steel A533B-1'}};
 const fmtL=mm=>mm>=1000?(mm/1000).toFixed(2)+' m':mm>=100?mm.toFixed(0)+' mm':mm>=10?mm.toFixed(1)+' mm':mm.toFixed(2)+' mm';
 const fmtKg=kg=>kg>=1000?(kg/1000).toFixed(1)+' t':kg>=1?kg.toFixed(kg>=100?0:1)+' kg':(kg*1000).toFixed(0)+' g';
 
